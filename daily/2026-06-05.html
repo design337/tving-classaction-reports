@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>듀오집단소송 광고 성과 분석 보고서 (6/5)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', 'Noto Sans CJK KR', -apple-system, sans-serif;
+  font-size: 9pt;
+  line-height: 1.55;
+  color: #1E293B;
+  background: #FFFFFF;
+}
+.page-wrap { max-width: 900px; margin: 0 auto; padding: 24px 18px; }
+@page { size: A4; margin: 14mm 12mm 16mm 12mm; }
+@page :first { margin: 0; }
+
+/* ---- Cover ---- */
+.cover {
+  page-break-after: always;
+  break-after: page;
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  color: #FFFFFF;
+  padding: 48px 36px;
+  border-radius: 8px;
+  margin-bottom: 28px;
+}
+.cover .wf-tag,
+.cover .mode-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 12px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.cover .wf-tag { background: rgba(123,104,174,0.20); color: #D6CEF0; margin-bottom: 6px; }
+.cover .mode-badge { background: rgba(59,130,246,0.20); color: #BFD7FF; margin-left: 6px; margin-bottom: 6px; }
+.cover h1 {
+  margin: 6px 0 4px;
+  font-size: 28pt;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  color: #FFFFFF;
+}
+.cover .subtitle { font-size: 12pt; font-weight: 300; color: #CBD5E1; margin-bottom: 14px; }
+.cover .divider {
+  width: 48px;
+  height: 2px;
+  background: #7B68AE;
+  margin: 14px 0 22px;
+}
+.cover .kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 20px 0 18px;
+}
+.cover .kpi-cover {
+  background: rgba(255,255,255,0.06);
+  border-left: 3px solid #7B68AE;
+  padding: 10px 12px;
+  border-radius: 0 4px 4px 0;
+}
+.cover .kpi-cover .label { font-size: 6.5pt; color: #94A3B8; font-weight: 500; letter-spacing: 0.4px; }
+.cover .kpi-cover .value { font-size: 15pt; font-weight: 700; color: #FFFFFF; margin-top: 2px; }
+.cover .kpi-cover .unit  { font-size: 7.5pt; font-weight: 400; color: #CBD5E1; }
+.cover .meta { font-size: 7.5pt; color: #94A3B8; margin-top: 14px; }
+
+/* ---- TOC ---- */
+.toc {
+  page-break-after: always;
+  break-after: page;
+  padding: 12px 4px 24px;
+}
+.toc h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #1E293B;
+  border-bottom: 2px solid #7B68AE;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+}
+.toc ol { margin: 0; padding-left: 20px; }
+.toc li { margin: 4px 0; font-size: 9.5pt; color: #5A6478; }
+.toc li strong { color: #1E293B; }
+
+/* ---- Section header (dark box) ---- */
+.section {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin: 22px 0 12px;
+}
+.section-header {
+  background: #1E293B;
+  padding: 10px 14px;
+  border-radius: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.section-header .sec-num {
+  color: #7B68AE;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.section-header .sec-title {
+  color: #FFFFFF;
+  font-size: 11pt;
+  font-weight: 700;
+}
+.section-header .sec-subtitle {
+  color: #CBD5E1;
+  font-size: 8pt;
+  font-weight: 400;
+}
+.section-body { padding: 12px 4px 6px; }
+
+/* ---- KPI cards (in body) ---- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+.kpi-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-left: 3px solid #7B68AE;
+  padding: 10px 12px;
+  border-radius: 4px;
+}
+.kpi-card .label { font-size: 7pt; color: #5A6478; font-weight: 500; letter-spacing: 0.4px; }
+.kpi-card .value { font-size: 14pt; font-weight: 700; color: #1E293B; margin-top: 2px; }
+.kpi-card .unit  { font-size: 7.5pt; font-weight: 400; color: #94A3B8; margin-top: 1px; }
+.kpi-card .delta { display: inline-block; margin-left: 4px; font-size: 7.5pt; font-weight: 700; }
+
+/* ---- Tables ---- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  margin: 6px 0 12px;
+  page-break-inside: avoid;
+}
+thead th {
+  background: #334155;
+  color: #FFFFFF;
+  font-size: 7.5pt;
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: left;
+  letter-spacing: 0.2px;
+}
+tbody td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #E2E8F0;
+  color: #1E293B;
+  vertical-align: middle;
+}
+tbody tr:nth-child(odd)  td { background: #FFFFFF; }
+tbody tr:nth-child(even) td { background: #F8FAFC; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.total td {
+  background: #1E293B !important;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* ---- Delta ---- */
+.up   { color: #C0392B; font-weight: 700; }
+.down { color: #1E3A8A; font-weight: 700; }
+.up-bad   { color: #C0392B; font-weight: 700; }
+.flat { color: #94A3B8; }
+.delta-note { font-size: 7pt; color: #94A3B8; font-style: italic; margin-left: 4px; }
+
+/* ---- Boxes ---- */
+.callout {
+  background: #E8E4F2;
+  border-left: 3px solid #7B68AE;
+  padding: 10px 14px;
+  border-radius: 0 4px 4px 0;
+  margin: 8px 0 12px;
+  font-size: 8.5pt;
+  line-height: 1.7;
+}
+.callout strong { color: #5B4894; }
+.callout .title { font-size: 9pt; font-weight: 700; color: #5B4894; display: block; margin-bottom: 4px; }
+.callout-red {
+  background: #FDF0EE;
+  border-left: 3px solid #C0392B;
+  padding: 9px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 8.5pt;
+}
+.callout-red .title { color: #C0392B; font-weight: 700; }
+.callout-green {
+  background: #EAF4EE;
+  border-left: 3px solid #1A6644;
+  padding: 9px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 8.5pt;
+}
+.callout-green .title { color: #1A6644; font-weight: 700; }
+
+/* ---- Tags / priorities ---- */
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 7pt;
+  font-weight: 700;
+  margin-right: 4px;
+  letter-spacing: 0.3px;
+}
+.tag.p1 { background: #FDF0EE; color: #C0392B; }
+.tag.p2 { background: #FEF3C7; color: #B45309; }
+.tag.p3 { background: #E8E4F2; color: #5B4894; }
+.tag.meta  { background: #E8E4F2; color: #5B4894; }
+.tag.naver { background: #EAF4EE; color: #1A6644; }
+.tag.ga    { background: #DBEAFE; color: #1E40AF; }
+
+/* ---- Misc ---- */
+p { margin: 4px 0; }
+.note-empty { color: #94A3B8; font-size: 8pt; font-style: italic; }
+.section-narrative { font-size: 8.5pt; color: #5A6478; margin: 6px 0 10px; line-height: 1.7; }
+.divider-soft { border: 0; border-top: 1px solid #E2E8F0; margin: 16px 0; }
+
+/* ---- Footer ---- */
+.footer {
+  border-top: 1px solid #E2E8F0;
+  text-align: center;
+  margin-top: 28px;
+  padding: 14px 0 6px;
+  color: #94A3B8;
+  font-size: 6.5pt;
+  letter-spacing: 0.3px;
+}
+.footer .pgnum { margin-left: 6px; }
+
+@media print {
+  body { background: #FFFFFF; }
+  .page-wrap { padding: 0; max-width: 100%; }
+  .cover, .section-header, thead th, tr.total td, .callout, .callout-red, .callout-green, .kpi-card {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<div class="cover">
+  <div>
+    <span class="wf-tag">DUO · 개인정보 유출 소송</span>
+    <span class="mode-badge">데일리 리포트</span>
+  </div>
+  <h1>광고 성과 일간 분석</h1>
+  <div class="subtitle">데이터 기준일 · 6/5</div>
+  <div class="divider"></div>
+  <div class="kpi-row">
+    <div class="kpi-cover">
+      <div class="label">총 광고비</div>
+      <div class="value">₩109,383</div>
+      <div class="unit">메타 + 네이버SA</div>
+    </div>
+    <div class="kpi-cover">
+      <div class="label">총 노출 / 클릭</div>
+      <div class="value">26,979 <span style="font-size:9pt;color:#94A3B8;">/ 2,416</span></div>
+      <div class="unit">CTR 8.96%</div>
+    </div>
+    <div class="kpi-cover">
+      <div class="label">평균 CPC</div>
+      <div class="value">₩45</div>
+      <div class="unit">광고비 ÷ 클릭</div>
+    </div>
+    <div class="kpi-cover">
+      <div class="label">신청 전환</div>
+      <div class="value">713</div>
+      <div class="unit">GA4 집단소송 신청</div>
+    </div>
+  </div>
+    <div class="kpi-row" style="margin-top:10px;">
+      <div class="kpi-cover" style="border-left-color:#1A6644;">
+        <div class="label">실 결제자</div>
+        <div class="value">0명</div>
+        <div class="unit">취소 제외</div>
+      </div>
+      <div class="kpi-cover" style="border-left-color:#1A6644;">
+        <div class="label">매출금액</div>
+        <div class="value">₩0</div>
+        <div class="unit">결제 × ₩10,000</div>
+      </div>
+      <div class="kpi-cover" style="border-left-color:#7B68AE;">
+        <div class="label">ROAS</div>
+        <div class="value">0.00%</div>
+        <div class="unit">매출 ÷ 광고비</div>
+      </div>
+      <div></div>
+    </div>
+
+  <div class="meta">캠페인 시작일 2026-04-23 · 캠페인 44일차 · 본 보고서는 2026년 6월 5일 (금) 기준</div>
+</div><div class="toc"><h2>목차 / Contents</h2><ol><li><strong>D1 · 핵심 결론 (Executive Summary)</strong></li><li><strong>D2 · 일간 KPI 스냅샷</strong></li><li><strong>D3 · 채널별 분석 (메타 · 네이버SA · GA)</strong></li><li><strong>D4 · 캠페인 상세</strong></li><li><strong>D5 · GA4 전환 분석</strong></li><li><strong>D6 · 인사이트 (IF–THEN–BECAUSE)</strong></li><li><strong>D7 · 액션 플랜</strong></li></ol></div>
+<div class="section">
+  <div class="section-header">
+    <span class="sec-num">SECTION 01</span>
+    <span class="sec-title">핵심 결론</span>
+    <span class="sec-subtitle">Executive Summary</span>
+  </div>
+  <div class="section-body"><div class="callout"><span class="title">D1. 오늘의 결론</span>2026-06-05 자동 발행 (브라우저 직접)</div><table>
+    <thead><tr><th>지표</th><th class="num">당일</th><th class="num">전일</th><th class="num">증감</th></tr></thead>
+    <tbody>
+      <tr><td>광고비</td><td class="num">₩109,383</td><td class="num">₩106,686</td><td class="num"><span class="up">▲2.5%</span></td></tr>
+      <tr><td>클릭</td><td class="num">2,416</td><td class="num">165</td><td class="num"><span class="up">▲1364.2%</span></td></tr>
+      <tr><td>CTR</td><td class="num">8.96%</td><td class="num">6.15%</td><td class="num"><span class="up">▲45.7%</span></td></tr>
+      <tr><td>CPC</td><td class="num">₩45</td><td class="num">₩647</td><td class="num"><span class="down">▼93.0%</span></td></tr>
+      <tr><td>총 사용자</td><td class="num">14,607</td><td class="num">3,227</td><td class="num"><span class="up">▲352.6%</span></td></tr>
+      <tr><td>참여율</td><td class="num">34.39%</td><td class="num">62.48%</td><td class="num"><span class="down">▼45.0%</span></td></tr>
+      <tr><td>이탈률</td><td class="num">65.61%</td><td class="num">37.52%</td><td class="num"><span class="up">▲74.9% (부정)</span></td></tr>
+      <tr><td>신청 전환</td><td class="num">713</td><td class="num">—</td><td class="num"><span class="flat">신규</span></td></tr>
+    </tbody>
+  </table><p class="delta-note">증감: 상승 ▲ 빨강 · 하락 ▼ 파랑. 단, 이탈률 ▲ 상승은 부정적 신호.</p></div></div>
+<div class="section">
+  <div class="section-header">
+    <span class="sec-num">SECTION 02</span>
+    <span class="sec-title">일간 KPI 스냅샷</span>
+    <span class="sec-subtitle">핵심 4개 카드</span>
+  </div>
+  <div class="section-body"><div class="kpi-grid">
+    <div class="kpi-card">
+    <div class="label">광고비</div>
+    <div class="value">₩109,383<span class="delta"><span class="up">▲2.5%</span></span></div>
+  </div>
+    <div class="kpi-card">
+    <div class="label">클릭</div>
+    <div class="value">2,416<span class="delta"><span class="up">▲1364.2%</span></span></div>
+  </div>
+    <div class="kpi-card">
+    <div class="label">CTR</div>
+    <div class="value">8.96%<span class="delta"><span class="up">▲45.7%</span></span></div>
+  </div>
+    <div class="kpi-card">
+    <div class="label">전환</div>
+    <div class="value">713<span class="delta"><span class="flat">신규</span></span></div>
+  </div>
+  </div><div class="kpi-grid">
+    <div class="kpi-card">
+    <div class="label">총 사용자</div>
+    <div class="value">14,607<span class="delta"><span class="up">▲352.6%</span></span></div>
+  </div>
+    <div class="kpi-card">
+    <div class="label">참여율</div>
+    <div class="value">34.39%<span class="delta"><span class="down">▼45.0%</span></span></div>
+  </div>
+    <div class="kpi-card">
+    <div class="label">이탈률</div>
+    <div class="value">65.61%<span class="delta"><span class="up">▲74.9% (부정)</span></span></div>
+  </div>
+    <div class="kpi-card">
+    <div class="label">CPC</div>
+    <div class="value">₩45<span class="delta"><span class="down">▼93.0%</span></span></div>
+  </div>
+  </div></div></div>
+<div class="section">
+  <div class="section-header">
+    <span class="sec-num">SECTION 03</span>
+    <span class="sec-title">채널별 분석</span>
+    <span class="sec-subtitle">메타 · 네이버SA · GA</span>
+  </div>
+  <div class="section-body"><table>
+    <thead><tr>
+      <th>채널</th>
+      <th class="num">광고비</th>
+      <th class="num">노출</th>
+      <th class="num">클릭</th>
+      <th class="num">CTR</th>
+      <th class="num">CPC</th>
+      <th class="num">총사용자</th>
+      <th class="num">참여율</th>
+      <th class="num">이탈률</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+    <td><strong>메타</strong></td>
+    <td class="num">₩105,424</td>
+    <td class="num">26,640</td>
+    <td class="num">2,411</td>
+    <td class="num">9.05% <span style="font-size:7pt;"><span class="up">▲50.1%</span></span></td>
+    <td class="num">₩44 <span style="font-size:7pt;"><span class="down">▼30.7%</span></span></td>
+    <td class="num">9,152</td>
+    <td class="num">28.42%</td>
+    <td class="num">71.58%</td>
+  </tr>
+      <tr>
+    <td><strong>네이버SA</strong></td>
+    <td class="num">₩3,959</td>
+    <td class="num">339</td>
+    <td class="num">5</td>
+    <td class="num">1.47% <span style="font-size:7pt;"><span class="down">▼77.8%</span></span></td>
+    <td class="num">₩792 <span style="font-size:7pt;"><span class="down">▼72.6%</span></span></td>
+    <td class="num">2,557</td>
+    <td class="num">86.18%</td>
+    <td class="num">13.82%</td>
+  </tr>
+      <tr class="total">
+    <td>전체</td>
+    <td class="num">₩109,383</td>
+    <td class="num">26,979</td>
+    <td class="num">2,416</td>
+    <td class="num">8.96%</td>
+    <td class="num">₩45</td>
+    <td class="num">14,607</td>
+    <td class="num">34.39%</td>
+    <td class="num">65.61%</td>
+  </tr>
+    </tbody>
+  </table><div class="callout"><span class="title"><span class="tag meta">메타</span> 채널 진단</span>...</div><div class="callout"><span class="title"><span class="tag naver">네이버SA</span> 채널 진단</span>...</div><div class="callout"><span class="title"><span class="tag ga">GA</span> 채널 진단</span>...</div></div></div>
+<div class="section">
+  <div class="section-header">
+    <span class="sec-num">SECTION 04</span>
+    <span class="sec-title">캠페인 상세</span>
+    <span class="sec-subtitle">광고/캠페인별 성과</span>
+  </div>
+  <div class="section-body"><h3 style="font-size:9pt;margin:6px 0 4px;color:#1E293B;"><span class="tag meta">메타</span> 광고별</h3><table>
+    <thead><tr>
+      <th>광고 이름</th>
+      <th class="num">광고비</th>
+      <th class="num">노출</th>
+      <th class="num">클릭</th>
+      <th class="num">CTR</th>
+      <th class="num">CPC</th>
+    </tr></thead><tbody><tr>
+      <td>tving_lowfee_260604</td>
+      <td class="num">₩102,363</td>
+      <td class="num">25,857</td>
+      <td class="num">2,368</td>
+      <td class="num">9.16%</td>
+      <td class="num">₩43</td>
+    </tr><tr>
+      <td>tving_applogo_260604</td>
+      <td class="num">₩1,517</td>
+      <td class="num">362</td>
+      <td class="num">14</td>
+      <td class="num">3.87%</td>
+      <td class="num">₩108</td>
+    </tr><tr>
+      <td>tving_10000_260604</td>
+      <td class="num">₩1,099</td>
+      <td class="num">261</td>
+      <td class="num">14</td>
+      <td class="num">5.36%</td>
+      <td class="num">₩79</td>
+    </tr><tr>
+      <td>tving_hacker_260604</td>
+      <td class="num">₩430</td>
+      <td class="num">153</td>
+      <td class="num">15</td>
+      <td class="num">9.80%</td>
+      <td class="num">₩29</td>
+    </tr><tr>
+      <td>tving_ci_260604</td>
+      <td class="num">₩15</td>
+      <td class="num">7</td>
+      <td class="num">—</td>
+      <td class="num">0.00%</td>
+      <td class="num">—</td>
+    </tr></tbody></table><h3 style="font-size:9pt;margin:10px 0 4px;color:#1E293B;"><span class="tag naver">네이버SA</span> 캠페인별</h3><table>
+    <thead><tr>
+      <th>캠페인</th>
+      <th class="num">광고비</th>
+      <th class="num">노출</th>
+      <th class="num">클릭</th>
+      <th class="num">CTR</th>
+      <th class="num">CPC</th>
+    </tr></thead><tbody><tr>
+      <td>파워링크_집단소송센터_결혼해듀오</td>
+      <td class="num">₩3,959</td>
+      <td class="num">339</td>
+      <td class="num">5</td>
+      <td class="num">1.47%</td>
+      <td class="num">₩792</td>
+    </tr></tbody></table></div></div>
+<div class="section">
+  <div class="section-header">
+    <span class="sec-num">SECTION 05</span>
+    <span class="sec-title">GA4 전환 분석</span>
+    <span class="sec-subtitle">집단소송 신청 = 총 사용자 수</span>
+  </div>
+  <div class="section-body"><table>
+    <thead><tr><th>지표</th><th class="num">당일</th><th class="num">전일</th><th class="num">증감</th></tr></thead>
+    <tbody>
+      <tr><td>신청 전환 (총사용자수)</td><td class="num">713</td><td class="num">—</td><td class="num"><span class="flat">신규</span></td></tr>
+      <tr><td>총 사용자</td><td class="num">14,607</td><td class="num">3,227</td><td class="num"><span class="up">▲352.6%</span></td></tr>
+      <tr><td>방문수</td><td class="num">3,653</td><td class="num">685</td><td class="num"><span class="up">▲433.3%</span></td></tr>
+      <tr><td>참여율</td><td class="num">34.39%</td><td class="num">62.48%</td><td class="num"><span class="down">▼45.0%</span></td></tr>
+      <tr><td>이탈률</td><td class="num">65.61%</td><td class="num">37.52%</td><td class="num"><span class="up">▲74.9% (부정)</span></td></tr>
+    </tbody>
+  </table><p class="section-narrative">신청 전환율(전환 ÷ 총사용자) = <strong>4.88%</strong>. 전환 정의는 GA4_티빙 집단소송 신청하기 시트의 <strong>총 사용자 수</strong>만 사용.</p></div></div>
+<div class="section">
+  <div class="section-header">
+    <span class="sec-num">SECTION 06</span>
+    <span class="sec-title">인사이트</span>
+    <span class="sec-subtitle">IF · THEN · BECAUSE</span>
+  </div>
+  <div class="section-body"><p class="note-empty">— 인사이트 미작성</p></div></div>
+<div class="section">
+  <div class="section-header">
+    <span class="sec-num">SECTION 07</span>
+    <span class="sec-title">액션 플랜</span>
+    <span class="sec-subtitle">Priority · Channel · Due</span>
+  </div>
+  <div class="section-body"><p class="note-empty">— 액션 미작성</p></div></div>
+<div class="footer">
+  에이아이컨실리움 | 법무법인 더 에이치 황해 — CONFIDENTIAL | 작성일 2026-06-09<span class="pgnum"></span>
+</div>
+</div>
+</body>
+</html>
