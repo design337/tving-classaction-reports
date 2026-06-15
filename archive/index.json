@@ -1,7 +1,13 @@
 {
   "campaign": "duo-classaction-2026",
-  "lastUpdated": "2026-06-15T03:47:08.456Z",
+  "lastUpdated": "2026-06-15T04:18:11.949Z",
   "reports": [
+    {
+      "date": "2026-06-14",
+      "type": "daily",
+      "title": "데일리 리포트 — 2026-06-14",
+      "url": "daily/2026-06-14.html"
+    },
     {
       "date": "2026-06-07",
       "type": "daily",
