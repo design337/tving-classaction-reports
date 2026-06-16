@@ -2,7 +2,7 @@
  * ============================================================================
  * 티빙 개인정보 유출 집단소송 — 광고 데이터 통합 처리 + 전략 보고서 발행
  * Single-file Apps Script (Code.gs)
- * Version: v1.1.4 (diag + header-detect + full-range zone1, 2026-06-16)
+ * Version: v1.1.5 (diag + header-detect + full-range zone1, 2026-06-16)
  *
  * 변경점 (v1.0 -> v1.1)
  *   Fix 1: _updateOverview — '종합지표' 시트 구역1 일자별 KPI + 구역2 채널×주차 매트릭스 자동 갱신
@@ -129,7 +129,7 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return _json({ok: true, info: 'Tving classaction reports', version: 'v1.1.4'});
+  return _json({ok: true, info: 'Tving classaction reports', version: 'v1.1.5'});
 }
 
 function _json(obj) {
@@ -477,6 +477,45 @@ function _aggregateByDate(ss, startDate, endDate) {
     google.rows.push(r);
   });
 
+  // GA4_Raw — 사이트 전반 세션/참여율 — 채널×주차 가중 평균 이탈률/참여율 계산용 (v1.1.5)
+  // 참여율 값이 % 형태("40.68%" 또는 0.4068 모두 처리), 방문수 가중치로 누적
+  const gaSess = {byChannel: {}, totalSessions: 0, totalEngaged: 0};
+  const parseRate = (v) => {
+    if (v === null || v === undefined || v === '') return 0;
+    const s = String(v).trim();
+    const hasPercent = s.indexOf('%') >= 0;
+    const n = parseFloat(s.replace(/[%,\s]/g, ''));
+    if (isNaN(n)) return 0;
+    if (hasPercent) return n / 100;
+    if (n > 1) return n / 100;  // 헤더 % 표기 없어도 값이 >1이면 % 단위
+    return n;
+  };
+  _readSheetRows(ss, 'GA4_Raw').forEach(r => {
+    const d = _normDate(r['날짜']);
+    if (!dateInRange(d)) return;
+    const sessions = num(r['방문수']);
+    if (sessions === 0) return;
+    const engageRate = parseRate(r['참여율']);
+    const engaged = sessions * engageRate;
+    const sm = String(r['세션 소스/매체'] || '');
+    let ch = 'Other';
+    if (/naver/i.test(sm)) ch = '네이버SA';
+    else if (/meta|facebook|fb|instagram|ig_/i.test(sm)) ch = '메타';
+    else if (/google.*cpc|gad|adwords/i.test(sm)) ch = '구글';
+    else if (/kakao|kkt/i.test(sm)) ch = '카카오';
+    else if (/direct|\(direct\)|\(none\)|\(not set\)|not.set|data.not.available/i.test(sm)) ch = '직접';
+    else if (/organic|google.*organic|naver.*organic/i.test(sm)) ch = '오가닉';
+    else if (/referral/i.test(sm)) ch = '리퍼럴';
+    else if (/ig|social/i.test(sm)) ch = '메타';
+    else if (/chatgpt|ai-assistant/i.test(sm)) ch = 'AI어시스턴트';
+    else if (/home/i.test(sm)) ch = '자체유입';
+    if (!gaSess.byChannel[ch]) gaSess.byChannel[ch] = {sessions: 0, engaged: 0};
+    gaSess.byChannel[ch].sessions += sessions;
+    gaSess.byChannel[ch].engaged += engaged;
+    gaSess.totalSessions += sessions;
+    gaSess.totalEngaged += engaged;
+  });
+
   // GA4 — 신청 이벤트 (Fix 3: 채널 매핑 확장)
   const ga = {users: 0, events: 0, byChannel: {}, rows: []};
   _readSheetRows(ss, 'GA4_티빙 집단소송 신청하기').forEach(r => {
@@ -532,7 +571,7 @@ function _aggregateByDate(ss, startDate, endDate) {
     });
   });
 
-  return {meta, naver, google, ga, naverKw, googleCh};
+  return {meta, naver, google, ga, gaSess, naverKw, googleCh};
 }
 
 // ============================================================================
@@ -1160,19 +1199,28 @@ function _writeZone1Fixed(ss, sheet, range) {
   const yyMMdd = (d) => d.replace(/-/g,'').slice(2);
   const rangeText = yyMMdd(range.minDate) + '-' + yyMMdd(range.maxDate);
 
+  // 가중 평균 참여율 — GA4_Raw 전체 세션 가중 (v1.1.5)
+  const engage = (agg.gaSess && agg.gaSess.totalSessions > 0)
+    ? agg.gaSess.totalEngaged / agg.gaSess.totalSessions : 0;
   const writes = [
-    {col: C.range, val: rangeText},
-    {col: C.cost,  val: tot},
-    {col: C.imp,   val: imp},
-    {col: C.clk,   val: clk},
-    {col: C.ctr,   val: ctr},
-    {col: C.cpc,   val: cpc},
-    {col: C.home,  val: home},
-    {col: C.info,  val: info}
-    // engage / pay / rev / roas — manual or 0
+    {col: C.range,  val: rangeText},
+    {col: C.cost,   val: tot},
+    {col: C.imp,    val: imp},
+    {col: C.clk,    val: clk},
+    {col: C.ctr,    val: ctr},
+    {col: C.cpc,    val: cpc},
+    {col: C.engage, val: engage},
+    {col: C.home,   val: home},
+    {col: C.info,   val: info}
+    // pay / rev / roas — manual
   ];
   writes.forEach(w => sheet.getRange(r, w.col).setValue(w.val));
-  return {ok: true, row: r, writes: writes.length, rangeText, totalCost: tot, totalClk: clk};
+  return {
+    ok: true, row: r, writes: writes.length, rangeText,
+    totalCost: tot, totalClk: clk, engage: engage,
+    gaSessionsTotal: agg.gaSess ? agg.gaSess.totalSessions : 0,
+    gaEngagedTotal: agg.gaSess ? agg.gaSess.totalEngaged : 0
+  };
 }
 
 // === Zone 2 — 채널×주차 매트릭스 ===
@@ -1219,17 +1267,30 @@ function _writeZone2Fixed(ss, sheet, range) {
         clk  = agg.meta.clk + agg.naver.clk + agg.google.clk;
         info = (agg.ga.byChannel['메타']||0) + (agg.ga.byChannel['네이버SA']||0) + (agg.ga.byChannel['구글']||0);
       }
+      // 가중 평균 이탈률/참여율 — 채널별 또는 전체 (v1.1.5)
+      let gsSessions = 0, gsEngaged = 0;
+      const gsBC = agg.gaSess ? agg.gaSess.byChannel : {};
+      if (/메타/.test(ch))      { gsSessions = (gsBC['메타']||{}).sessions||0;   gsEngaged = (gsBC['메타']||{}).engaged||0; }
+      else if (/네이버/.test(ch)){ gsSessions = (gsBC['네이버SA']||{}).sessions||0; gsEngaged = (gsBC['네이버SA']||{}).engaged||0; }
+      else if (/구글/.test(ch)) { gsSessions = (gsBC['구글']||{}).sessions||0; gsEngaged = (gsBC['구글']||{}).engaged||0; }
+      else if (/전체/.test(ch)) {
+        gsSessions = agg.gaSess ? agg.gaSess.totalSessions : 0;
+        gsEngaged  = agg.gaSess ? agg.gaSess.totalEngaged : 0;
+      }
+      const engageR = gsSessions > 0 ? gsEngaged / gsSessions : 0;
+      const bounceR = gsSessions > 0 ? 1 - engageR : 0;
       const ctr = imp > 0 ? clk / imp : 0;
       const cpc = clk > 0 ? cost / clk : 0;
       const cpm = imp > 0 ? cost / imp * 1000 : 0;
       const writes = [
         {col: K.cost, val: cost}, {col: K.imp, val: imp}, {col: K.clk, val: clk},
         {col: K.ctr, val: ctr}, {col: K.cpc, val: cpc}, {col: K.cpm, val: cpm},
-        {col: K.info, val: info}
+        {col: K.info, val: info},
+        {col: K.bounce, val: bounceR}, {col: K.engage, val: engageR}
       ];
       writes.forEach(w => sheet.getRange(sheetRow, w.col).setValue(w.val));
       writeCount += writes.length;
-      summary.push({row: sheetRow, type: 'subtotal', channel: ch, writes: writes.length});
+      summary.push({row: sheetRow, type: 'subtotal', channel: ch, writes: writes.length, sessions: gsSessions, engageRate: engageR});
       continue;
     }
 
@@ -1248,17 +1309,26 @@ function _writeZone2Fixed(ss, sheet, range) {
 
     if (cost === 0 && imp === 0 && clk === 0 && info === 0) continue;  // 빈 주차는 건드리지 않음
 
+    // 가중 평균 이탈률/참여율 — 채널별 (v1.1.5)
+    const gsBC = agg.gaSess ? agg.gaSess.byChannel : {};
+    let gsSessions = 0, gsEngaged = 0;
+    if (ch === '메타')      { gsSessions = (gsBC['메타']||{}).sessions||0;   gsEngaged = (gsBC['메타']||{}).engaged||0; }
+    else if (ch === '네이버SA'){ gsSessions = (gsBC['네이버SA']||{}).sessions||0; gsEngaged = (gsBC['네이버SA']||{}).engaged||0; }
+    else if (ch === '구글') { gsSessions = (gsBC['구글']||{}).sessions||0; gsEngaged = (gsBC['구글']||{}).engaged||0; }
+    const engageR = gsSessions > 0 ? gsEngaged / gsSessions : 0;
+    const bounceR = gsSessions > 0 ? 1 - engageR : 0;
     const ctr = imp > 0 ? clk / imp : 0;
     const cpc = clk > 0 ? cost / clk : 0;
     const cpm = imp > 0 ? cost / imp * 1000 : 0;
     const writes = [
       {col: K.cost, val: cost}, {col: K.imp, val: imp}, {col: K.clk, val: clk},
       {col: K.ctr,  val: ctr},  {col: K.cpc, val: cpc}, {col: K.cpm, val: cpm},
-      {col: K.info, val: info}
+      {col: K.info, val: info},
+      {col: K.bounce, val: bounceR}, {col: K.engage, val: engageR}
     ];
     writes.forEach(w => sheet.getRange(sheetRow, w.col).setValue(w.val));
     writeCount += writes.length;
-    summary.push({row: sheetRow, channel: ch, week: wk, period: pd.start + '~' + pd.end, writes: writes.length});
+    summary.push({row: sheetRow, channel: ch, week: wk, period: pd.start + '~' + pd.end, writes: writes.length, sessions: gsSessions, engageRate: engageR});
   }
 
   return {ok: true, writes: writeCount, rows: summary};
@@ -1790,7 +1860,7 @@ function _status() {
     project: CONFIG.PROJECT_NAME,
     spreadsheet: ss.getName(),
     sheetId: ss.getId(),
-    version: 'v1.1.4',
+    version: 'v1.1.5',
     sheets,
     historyEvents: _readMarketingHistory().length
   };
