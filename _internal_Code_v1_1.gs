@@ -1059,36 +1059,180 @@ function _appendRunLog(action, status, summary, detail) {
 }
 
 // ============================================================================
-// Overview sheet auto-update (Fix 1)
+// Overview sheet auto-update (Fix 1) — patched for actual sheet layout
 // ============================================================================
+//
+// 실제 종합지표 시트 레이아웃:
+//   R1: 제목
+//   R2: 【구역 1】 마케팅 KPI
+//   R3: 헤더 — 총 기간 | 총 광고비 | 총 노출 | 총 클릭 | 평균 CTR | 평균 CPC |
+//                평균 참여율 | 홈페이지 유입 | info 유입자 | 실 결제자 | 매출금액 | ROAS
+//   R4: 단일 데이터 행 (전체 기간 합산)
+//   R5: blank
+//   R6: 【구역 2】 채널별 주간 지표
+//   R7: 헤더 — col 0:채널 | 1:주차 | 2:기간 | 3:광고비 | 6:노출 | 9:클릭 |
+//                12:CTR | 15:CPC | 18:CPM | 21:info유입 | 24:이탈율 | 27:참여율
+//   R9~R17: 메타 0주차~8주차
+//   R18: 메타 소계
+//   R19~R27: 네이버SA 0주차~8주차
+//   R28: 네이버SA 소계
+//   R29~R37: 구글 0주차~8주차
+//   R38: 구글 소계
+//   R39: 전체 합계
+//
+//   주차 기간 텍스트: "X/Y(요일)~X/Y(요일)" (col 2). 2026년 가정.
+//   KPI 값은 헤더 col+1 위치 (col 4, 7, 10, 13, 16, 19).
+
+const _OVERVIEW = {
+  zone1Row: 4,                     // 1-based row
+  zone1Cols: {                     // 1-based col
+    range: 1, cost: 2, imp: 3, clk: 4, ctr: 5, cpc: 6,
+    engage: 7, home: 8, info: 9, pay: 10, rev: 11, roas: 12
+  },
+  zone2KpiCols: {                  // 1-based col offsets for value cells
+    cost: 5, imp: 8, clk: 11, ctr: 14, cpc: 17, cpm: 20,
+    info: 23, bounce: 26, engage: 29
+  },
+  zone2RowChannel: 1,              // 1-based col index for channel name
+  zone2RowWeek: 2,
+  zone2RowPeriod: 3,
+  zone2DataStartRow: 9,
+  zone2DataEndRow: 39
+};
 
 function _updateOverview(ss, range) {
   const sheet = ss.getSheetByName(CONFIG.OVERVIEW_SHEET);
   if (!sheet) {
     return {ok: false, error: 'overview sheet not found'};
   }
-  const lastRow = Math.max(sheet.getLastRow(), 1);
-  const lastCol = Math.max(sheet.getLastColumn(), 1);
-  const grid = sheet.getRange(1, 1, lastRow, lastCol).getValues();
+  const zone1Result = _writeZone1Fixed(ss, sheet, range);
+  const zone2Result = _writeZone2Fixed(ss, sheet, range);
+  return {ok: true, zone1: zone1Result, zone2: zone2Result};
+}
 
-  // 구조 자동 탐지
-  const layout = _detectOverviewLayout(grid);
-  const zone1Result = _writeZone1(ss, sheet, grid, layout, range);
-  const zone2Result = _writeZone2(ss, sheet, grid, layout, range);
+// === Zone 1 — 단일 row 전체 기간 합산 ===
+function _writeZone1Fixed(ss, sheet, range) {
+  const r = _OVERVIEW.zone1Row;
+  const C = _OVERVIEW.zone1Cols;
+  const agg = _aggregateByDate(ss, range.minDate, range.maxDate);
+  const tot = agg.meta.cost + agg.naver.cost + agg.google.cost;
+  const imp = agg.meta.imp + agg.naver.imp + agg.google.imp;
+  const clk = agg.meta.clk + agg.naver.clk + agg.google.clk;
+  const ctr = imp > 0 ? clk / imp : 0;
+  const cpc = clk > 0 ? tot / clk : 0;
+  const home = agg.ga.users || 0;
+  const info = agg.ga.events || 0;
+  // 기간 텍스트 — yymmdd-yymmdd
+  const yyMMdd = (d) => d.replace(/-/g,'').slice(2);
+  const rangeText = yyMMdd(range.minDate) + '-' + yyMMdd(range.maxDate);
 
-  return {
-    ok: true,
-    layout: {
-      zone1HeaderRow: layout.zone1HeaderRow,
-      zone1Cols: Object.keys(layout.zone1Cols),
-      zone2HeaderRow: layout.zone2HeaderRow,
-      zone2Weeks: Object.keys(layout.zone2WeekCols),
-      zone2Channels: Object.keys(layout.zone2ChannelRows),
-      zone2KpiRows: layout.zone2KpiRows.length
-    },
-    zone1: zone1Result,
-    zone2: zone2Result
+  const writes = [
+    {col: C.range, val: rangeText},
+    {col: C.cost,  val: tot},
+    {col: C.imp,   val: imp},
+    {col: C.clk,   val: clk},
+    {col: C.ctr,   val: ctr},
+    {col: C.cpc,   val: cpc},
+    {col: C.home,  val: home},
+    {col: C.info,  val: info}
+    // engage / pay / rev / roas — manual or 0
+  ];
+  writes.forEach(w => sheet.getRange(r, w.col).setValue(w.val));
+  return {ok: true, row: r, writes: writes.length, rangeText, totalCost: tot, totalClk: clk};
+}
+
+// === Zone 2 — 채널×주차 매트릭스 ===
+function _writeZone2Fixed(ss, sheet, range) {
+  const startRow = _OVERVIEW.zone2DataStartRow;
+  const endRow = _OVERVIEW.zone2DataEndRow;
+  const data = sheet.getRange(startRow, 1, endRow - startRow + 1, 4).getValues();
+
+  // Period 파싱: "X/Y(요일)~X/Y(요일)" → {start: 'YYYY-MM-DD', end: 'YYYY-MM-DD'}
+  const parsePeriod = (txt) => {
+    if (!txt) return null;
+    const m = String(txt).match(/(\d+)\/(\d+).*?~\s*(\d+)\/(\d+)/);
+    if (!m) return null;
+    return {
+      start: _periodToISO(parseInt(m[1]), parseInt(m[2])),
+      end:   _periodToISO(parseInt(m[3]), parseInt(m[4]))
+    };
   };
+
+  const K = _OVERVIEW.zone2KpiCols;
+  const channelAgg = {'메타': null, '네이버SA': null, '구글': null};
+  const summary = [];
+  let writeCount = 0;
+
+  for (let i = 0; i < data.length; i++) {
+    const row = data[i];
+    const sheetRow = startRow + i;
+    const ch = String(row[0] || '').trim();
+    const wk = String(row[1] || '').trim();
+    const pd = parsePeriod(row[2]);
+    if (!ch) continue;
+
+    // 소계 / 합계 행 처리
+    if (/소계/.test(ch) || ch === '전체 합계') {
+      // 전체 기간 합산
+      const agg = _aggregateByDate(ss, range.minDate, range.maxDate);
+      let cost = 0, imp = 0, clk = 0, info = 0;
+      if (/메타/.test(ch))      { cost = agg.meta.cost;   imp = agg.meta.imp;   clk = agg.meta.clk;   info = agg.ga.byChannel['메타'] || 0; }
+      else if (/네이버/.test(ch)){ cost = agg.naver.cost;  imp = agg.naver.imp;  clk = agg.naver.clk;  info = agg.ga.byChannel['네이버SA'] || 0; }
+      else if (/구글/.test(ch)) { cost = agg.google.cost; imp = agg.google.imp; clk = agg.google.clk; info = agg.ga.byChannel['구글'] || 0; }
+      else if (/전체/.test(ch)) {
+        cost = agg.meta.cost + agg.naver.cost + agg.google.cost;
+        imp  = agg.meta.imp + agg.naver.imp + agg.google.imp;
+        clk  = agg.meta.clk + agg.naver.clk + agg.google.clk;
+        info = (agg.ga.byChannel['메타']||0) + (agg.ga.byChannel['네이버SA']||0) + (agg.ga.byChannel['구글']||0);
+      }
+      const ctr = imp > 0 ? clk / imp : 0;
+      const cpc = clk > 0 ? cost / clk : 0;
+      const cpm = imp > 0 ? cost / imp * 1000 : 0;
+      const writes = [
+        {col: K.cost, val: cost}, {col: K.imp, val: imp}, {col: K.clk, val: clk},
+        {col: K.ctr, val: ctr}, {col: K.cpc, val: cpc}, {col: K.cpm, val: cpm},
+        {col: K.info, val: info}
+      ];
+      writes.forEach(w => sheet.getRange(sheetRow, w.col).setValue(w.val));
+      writeCount += writes.length;
+      summary.push({row: sheetRow, type: 'subtotal', channel: ch, writes: writes.length});
+      continue;
+    }
+
+    // 채널 + 주차 데이터 행 — period가 분석 기간과 겹치는지 확인
+    if (!pd) continue;
+    if (!(ch === '메타' || ch === '네이버SA' || ch === '구글')) continue;
+    // 겹침 검사: 주차 [pd.start, pd.end] ∩ [range.minDate, range.maxDate] != ∅
+    if (pd.end < range.minDate || pd.start > range.maxDate) continue;
+
+    // 그 주차의 데이터를 채널별로 집계 (해당 주차 기간만)
+    const agg = _aggregateByDate(ss, pd.start, pd.end);
+    let cost = 0, imp = 0, clk = 0, info = 0;
+    if (ch === '메타')      { cost = agg.meta.cost;   imp = agg.meta.imp;   clk = agg.meta.clk;   info = agg.ga.byChannel['메타'] || 0; }
+    else if (ch === '네이버SA'){ cost = agg.naver.cost; imp = agg.naver.imp; clk = agg.naver.clk; info = agg.ga.byChannel['네이버SA'] || 0; }
+    else if (ch === '구글') { cost = agg.google.cost; imp = agg.google.imp; clk = agg.google.clk; info = agg.ga.byChannel['구글'] || 0; }
+
+    if (cost === 0 && imp === 0 && clk === 0 && info === 0) continue;  // 빈 주차는 건드리지 않음
+
+    const ctr = imp > 0 ? clk / imp : 0;
+    const cpc = clk > 0 ? cost / clk : 0;
+    const cpm = imp > 0 ? cost / imp * 1000 : 0;
+    const writes = [
+      {col: K.cost, val: cost}, {col: K.imp, val: imp}, {col: K.clk, val: clk},
+      {col: K.ctr,  val: ctr},  {col: K.cpc, val: cpc}, {col: K.cpm, val: cpm},
+      {col: K.info, val: info}
+    ];
+    writes.forEach(w => sheet.getRange(sheetRow, w.col).setValue(w.val));
+    writeCount += writes.length;
+    summary.push({row: sheetRow, channel: ch, week: wk, period: pd.start + '~' + pd.end, writes: writes.length});
+  }
+
+  return {ok: true, writes: writeCount, rows: summary};
+}
+
+function _periodToISO(m, d) {
+  // 2026년 가정. m이 1~12 사이.
+  return '2026-' + _pad(m) + '-' + _pad(d);
 }
 
 function _detectOverviewLayout(grid) {
