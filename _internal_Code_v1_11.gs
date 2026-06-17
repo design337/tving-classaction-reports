@@ -2,7 +2,7 @@
  * ============================================================================
  * 티빙 개인정보 유출 집단소송 — 광고 데이터 통합 처리 + 전략 보고서 발행
  * Single-file Apps Script (Code.gs)
- * Version: v1.1.10 (diag + header-detect + full-range zone1, 2026-06-16)
+ * Version: v1.1.11 (diag + header-detect + full-range zone1, 2026-06-16)
  *
  * 변경점 (v1.0 -> v1.1)
  *   Fix 1: _updateOverview — '종합지표' 시트 구역1 일자별 KPI + 구역2 채널×주차 매트릭스 자동 갱신
@@ -132,7 +132,7 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return _json({ok: true, info: 'Tving classaction reports', version: 'v1.1.10'});
+  return _json({ok: true, info: 'Tving classaction reports', version: 'v1.1.11'});
 }
 
 function _json(obj) {
@@ -480,7 +480,7 @@ function _aggregateByDate(ss, startDate, endDate) {
     google.rows.push(r);
   });
 
-  // GA4_Raw — 사이트 전반 세션/참여율 — 채널×주차 가중 평균 이탈률/참여율 계산용 (v1.1.10)
+  // GA4_Raw — 사이트 전반 세션/참여율 — 채널×주차 가중 평균 이탈률/참여율 계산용 (v1.1.11)
   // 참여율 값이 % 형태("40.68%" 또는 0.4068 모두 처리), 방문수 가중치로 누적
   const gaSess = {byChannel: {}, totalSessions: 0, totalEngaged: 0};
   const parseRate = (v) => {
@@ -1040,7 +1040,124 @@ function _publishToGithub(path, html, commitMsg) {
 // Report log + run log (Fix 2)
 // ============================================================================
 
-// === 메타_광고 시트 dedupe (v1.1.10) ===
+// === 메타 시트 정규화 + 모든 시트 일자 정렬 (v1.1.11) ===
+// _normalizeMetaSheet: 메타_광고 시트 캠페인명 통일 + trim + 빈 row 제거 + 일자 정렬
+// _sortAllSheetsByDate: 모든 광고/GA4 시트 일자 컬럼 기준 오름차순 정렬
+function _normalizeMetaSheet() {
+  const sheet = _ss().getSheetByName('메타_광고');
+  if (!sheet) return {ok: false, error: 'sheet not found'};
+  const lr = sheet.getLastRow();
+  const lc = sheet.getLastColumn();
+  if (lr < 2) return {ok: true, note: 'empty'};
+
+  const data = sheet.getRange(1, 1, lr, lc).getValues();
+  const headers = data[0];
+  const rows = data.slice(1);
+
+  const idxCampaign = headers.indexOf('캠페인 이름');
+  const idxAdSet = headers.indexOf('광고 세트 이름');
+  const idxAd = headers.indexOf('광고 이름');
+  const idxDate = headers.indexOf('일');
+  const idxCost = headers.indexOf('지출 금액 (KRW)');
+
+  const NORM_CAMP = '티빙_집단소송_260604';  // 통일된 캠페인명
+
+  // 1. 노이즈 제거 + trim + 캠페인명 통일
+  const cleaned = [];
+  let removedEmpty = 0, removedNoise = 0;
+  for (const r of rows) {
+    // 빈 row 검사
+    const isEmpty = r.every(c => c === '' || c === null || c === undefined);
+    if (isEmpty) { removedEmpty++; continue; }
+    // cost null/0이고 노출도 0인 노이즈
+    const cost = parseFloat(String(r[idxCost]||'0').replace(/,/g,'')) || 0;
+    const idxImp = headers.indexOf('노출');
+    const imp = idxImp >= 0 ? parseFloat(String(r[idxImp]||'0').replace(/,/g,'')) || 0 : 0;
+    if (cost === 0 && imp === 0) { removedNoise++; continue; }
+    // 캠페인명 통일 — '티빙_집단소송' prefix 가진 모든 변형을 NORM_CAMP로
+    const newRow = r.slice();
+    const c0 = String(newRow[idxCampaign] || '').trim();
+    if (/^티빙_집단소송/.test(c0) || c0.indexOf('티빙_집단소송') === 0 || c0.indexOf('티빙') === 0) {
+      newRow[idxCampaign] = NORM_CAMP;
+    } else {
+      newRow[idxCampaign] = c0;
+    }
+    // trim 광고세트/광고이름
+    if (idxAdSet >= 0) newRow[idxAdSet] = String(newRow[idxAdSet] || '').trim();
+    if (idxAd >= 0) newRow[idxAd] = String(newRow[idxAd] || '').trim();
+    cleaned.push(newRow);
+  }
+
+  // 2. 일자 오름차순 → 광고세트 → 광고이름 정렬
+  cleaned.sort((a, b) => {
+    const da = _normDate(a[idxDate]);
+    const db = _normDate(b[idxDate]);
+    if (da !== db) return da < db ? -1 : 1;
+    const sa = String(a[idxAdSet] || '');
+    const sb = String(b[idxAdSet] || '');
+    if (sa !== sb) return sa < sb ? -1 : 1;
+    return String(a[idxAd] || '') < String(b[idxAd] || '') ? -1 : 1;
+  });
+
+  // 3. 시트 데이터 영역 모두 삭제 + 재기록
+  sheet.getRange(2, 1, lr - 1, lc).clearContent();
+  if (cleaned.length > 0) {
+    sheet.getRange(2, 1, cleaned.length, lc).setValues(cleaned);
+  }
+
+  // 일자 범위
+  let minDate = null, maxDate = null;
+  if (cleaned.length > 0) {
+    minDate = _normDate(cleaned[0][idxDate]);
+    maxDate = _normDate(cleaned[cleaned.length - 1][idxDate]);
+  }
+
+  return {
+    ok: true,
+    before: rows.length,
+    after: cleaned.length,
+    removedEmpty,
+    removedNoise,
+    normalizedCampaign: NORM_CAMP,
+    dateRange: minDate + '~' + maxDate
+  };
+}
+
+// 모든 광고/GA4 시트 일자 컬럼 기준 오름차순 정렬
+function _sortAllSheetsByDate() {
+  const ss = _ss();
+  const results = {};
+  for (const sheetName in CONFIG.RAW_SHEETS) {
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet) { results[sheetName] = 'not found'; continue; }
+    const lr = sheet.getLastRow();
+    const lc = sheet.getLastColumn();
+    if (lr < 3) { results[sheetName] = 'too small'; continue; }
+    const dateCol = CONFIG.RAW_SHEETS[sheetName].dateCol;
+    const headers = sheet.getRange(1, 1, 1, lc).getValues()[0];
+    const idxDate = headers.indexOf(dateCol);
+    if (idxDate < 0) { results[sheetName] = 'date col not found: ' + dateCol; continue; }
+
+    const data = sheet.getRange(2, 1, lr - 1, lc).getValues();
+    // 빈 row 제거 + 정렬
+    const cleaned = data.filter(r => r.some(c => c !== '' && c !== null && c !== undefined));
+    cleaned.sort((a, b) => {
+      const da = _normDate(a[idxDate]);
+      const db = _normDate(b[idxDate]);
+      if (da !== db) return da < db ? -1 : 1;
+      return 0;
+    });
+
+    sheet.getRange(2, 1, lr - 1, lc).clearContent();
+    if (cleaned.length > 0) {
+      sheet.getRange(2, 1, cleaned.length, lc).setValues(cleaned);
+    }
+    results[sheetName] = {before: data.length, after: cleaned.length};
+  }
+  return {ok: true, sheets: results};
+}
+
+// === 메타_광고 시트 dedupe (v1.1.11) ===
 // 캠페인명 정규화: 'tving_집단소송_260604' 같은 suffix(_숫자/_yyyymmdd) 제거 → '티빙_집단소송'
 // 정규화된 (캠페인+광고세트+광고이름+일) 키로 그룹화 → 가장 cost 큰 row만 보존
 function _dedupeMeta() {
@@ -1112,7 +1229,7 @@ function _dedupeMeta() {
   };
 }
 
-// === 분석 보고서 시트 — GitHub 발행 파일 기반 전체 재생성 (v1.1.10) ===
+// === 분석 보고서 시트 — GitHub 발행 파일 기반 전체 재생성 (v1.1.11) ===
 // daily/*.html + weekly/*.html → 일자 오름차순 정렬해서 R3부터 다시 채움
 function _rebuildReportLog() {
   const props = PropertiesService.getScriptProperties();
@@ -1203,7 +1320,7 @@ function _rebuildReportLog() {
   };
 }
 
-// === 분석 보고서 시트 — 링크 없는/잘못된 row 정리 (v1.1.10) ===
+// === 분석 보고서 시트 — 링크 없는/잘못된 row 정리 (v1.1.11) ===
 // R1 제목, R2 헤더, R3부터 데이터. F열(링크)이 http 시작 안 하면 빈 row로 간주하여 삭제.
 function _cleanupReportLog() {
   const sheet = _ss().getSheetByName(CONFIG.REPORT_SHEET);
@@ -1382,7 +1499,7 @@ function _updateOverview(ss, range) {
   }
   const zone1Result = _writeZone1Fixed(ss, sheet, range);
   const zone2Result = _writeZone2Fixed(ss, sheet, range);
-  // 셀 포맷 정규화 (v1.1.10) — % 잘못 잡힌 셀들 정상화
+  // 셀 포맷 정규화 (v1.1.11) — % 잘못 잡힌 셀들 정상화
   let formatResult = {ok: false, note: 'skipped'};
   try {
     formatResult = _normalizeOverviewFormats(sheet);
@@ -1393,7 +1510,7 @@ function _updateOverview(ss, range) {
   return {ok: true, zone1: zone1Result, zone2: zone2Result, formats: formatResult};
 }
 
-// === 셀 포맷 정규화 (v1.1.10) ===
+// === 셀 포맷 정규화 (v1.1.11) ===
 // 종합지표 시트 zone1 R4 + zone2 R9~R39 셀 포맷 일괄 정리
 //   - 광고비/CPC: ₩#,##0
 //   - 노출/클릭/CPM/info유입: #,##0
@@ -1463,7 +1580,7 @@ function _writeZone1Fixed(ss, sheet, range) {
   const ctr = imp > 0 ? clk / imp : 0;
   const cpc = clk > 0 ? tot / clk : 0;
   const home = agg.ga.users || 0;
-  // 옵션 A — info 유입자도 사용자 수 기준 (v1.1.10)
+  // 옵션 A — info 유입자도 사용자 수 기준 (v1.1.11)
   // zone2 채널×주차 합(13,977 사용자, 매핑된 3채널만)과 zone1 I4(17,400 전체 채널 사용자)
   // 차이 3,423 = 매핑 안 된 채널(직접/오가닉/카카오 등) 사용자
   const info = agg.ga.users || 0;
@@ -1471,7 +1588,7 @@ function _writeZone1Fixed(ss, sheet, range) {
   const yyMMdd = (d) => d.replace(/-/g,'').slice(2);
   const rangeText = yyMMdd(range.minDate) + '-' + yyMMdd(range.maxDate);
 
-  // 가중 평균 참여율 — GA4_Raw 전체 세션 가중 (v1.1.10)
+  // 가중 평균 참여율 — GA4_Raw 전체 세션 가중 (v1.1.11)
   const engage = (agg.gaSess && agg.gaSess.totalSessions > 0)
     ? agg.gaSess.totalEngaged / agg.gaSess.totalSessions : 0;
   const writes = [
@@ -1539,7 +1656,7 @@ function _writeZone2Fixed(ss, sheet, range) {
         clk  = agg.meta.clk + agg.naver.clk + agg.google.clk;
         info = (agg.ga.byChannel['메타']||0) + (agg.ga.byChannel['네이버SA']||0) + (agg.ga.byChannel['구글']||0);
       }
-      // 가중 평균 이탈률/참여율 — 채널별 또는 전체 (v1.1.10)
+      // 가중 평균 이탈률/참여율 — 채널별 또는 전체 (v1.1.11)
       let gsSessions = 0, gsEngaged = 0;
       const gsBC = agg.gaSess ? agg.gaSess.byChannel : {};
       if (/메타/.test(ch))      { gsSessions = (gsBC['메타']||{}).sessions||0;   gsEngaged = (gsBC['메타']||{}).engaged||0; }
@@ -1581,7 +1698,7 @@ function _writeZone2Fixed(ss, sheet, range) {
 
     if (cost === 0 && imp === 0 && clk === 0 && info === 0) continue;  // 빈 주차는 건드리지 않음
 
-    // 가중 평균 이탈률/참여율 — 채널별 (v1.1.10)
+    // 가중 평균 이탈률/참여율 — 채널별 (v1.1.11)
     const gsBC = agg.gaSess ? agg.gaSess.byChannel : {};
     let gsSessions = 0, gsEngaged = 0;
     if (ch === '메타')      { gsSessions = (gsBC['메타']||{}).sessions||0;   gsEngaged = (gsBC['메타']||{}).engaged||0; }
@@ -2036,7 +2153,7 @@ function _inspectSheets(body) {
     };
   }
 
-  // 전체 기간(CAMPAIGN_START~today) GA 채널 분포 — v1.1.10 매핑 안 된 채널 정체 분석
+  // 전체 기간(CAMPAIGN_START~today) GA 채널 분포 — v1.1.11 매핑 안 된 채널 정체 분석
   try {
     const today = _fmt(new Date());
     const agg = _aggregateByDate(ss, CONFIG.CAMPAIGN_START, today);
@@ -2152,7 +2269,7 @@ function _status() {
     project: CONFIG.PROJECT_NAME,
     spreadsheet: ss.getName(),
     sheetId: ss.getId(),
-    version: 'v1.1.10',
+    version: 'v1.1.11',
     sheets,
     historyEvents: _readMarketingHistory().length
   };
