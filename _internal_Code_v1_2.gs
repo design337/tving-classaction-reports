@@ -1362,11 +1362,12 @@ function _writeZone1Fixed(ss, sheet, range) {
   const clk = agg.meta.clk + agg.naver.clk + agg.google.clk;
   const ctr = imp > 0 ? clk / imp : 0;
   const cpc = clk > 0 ? tot / clk : 0;
+  // v1.2.1.3 — zone1은 종합. info유입 = GA 사용자 중 직접 제외 = 전체 - 직접
+  // home = ga.users 그대로 (홈유입 — 모든 사용자)
+  // info = 직접 제외 사용자 = 신청자(직접 제외)
   const home = agg.ga.users || 0;
-  // 옵션 A — info 유입자도 사용자 수 기준 (v1.1.12)
-  // zone2 채널×주차 합(13,977 사용자, 매핑된 3채널만)과 zone1 I4(17,400 전체 채널 사용자)
-  // 차이 3,423 = 매핑 안 된 채널(직접/오가닉/카카오 등) 사용자
-  const info = agg.ga.users || 0;
+  const directU = (agg.ga.byChannel && agg.ga.byChannel['직접']) || 0;
+  const info = Math.max(0, (agg.ga.users || 0) - directU);
   // 기간 텍스트 — yymmdd-yymmdd
   const yyMMdd = (d) => d.replace(/-/g,'').slice(2);
   const rangeText = yyMMdd(range.minDate) + '-' + yyMMdd(range.maxDate);
