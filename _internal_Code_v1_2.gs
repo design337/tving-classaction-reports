@@ -2348,17 +2348,17 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   const gaBy = analysis._gaByChannel || {};
   const prevGaBy = (prev && prev._gaByChannel) || {};
 
-  // 분류 함수
+  // 분류 함수 — agg.ga.byChannel은 이미 한국어 채널명으로 집계됨
   function classifyChannels(by) {
     const out = {naver:0, meta:0, kakao:0, organic:0, referral:0, ai:0, etc:0};
-    Object.entries(by).forEach(([sm, u]) => {
-      if (/naver\s*\/\s*sa_/i.test(sm)) out.naver += u;
-      else if (/Meta\s*\/\s*fb_ig/i.test(sm)) out.meta += u;
-      else if (/kakao/i.test(sm)) out.kakao += u;
-      else if (/organic/i.test(sm)) out.organic += u;
-      else if (/referral|blog_txt/i.test(sm)) out.referral += u;
-      else if (/chatgpt|perplexity|ai-assistant/i.test(sm)) out.ai += u;
-      else if (/social|home|ig/i.test(sm)) out.etc += u;
+    Object.entries(by).forEach(([key, u]) => {
+      if (key === '네이버SA' || /naver\s*\/\s*sa_/i.test(key)) out.naver += u;
+      else if (key === '메타' || /Meta\s*\/\s*fb_ig/i.test(key)) out.meta += u;
+      else if (key === '카카오' || /kakao/i.test(key)) out.kakao += u;
+      else if (key === '오가닉' || /organic/i.test(key)) out.organic += u;
+      else if (key === '리퍼럴' || /referral|blog_txt/i.test(key)) out.referral += u;
+      else if (key === 'AI어시스턴트' || /chatgpt|perplexity|ai-assistant/i.test(key)) out.ai += u;
+      else if (key === '자체유입' || /social|home|ig/i.test(key)) out.etc += u;
     });
     return out;
   }
@@ -2371,8 +2371,8 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
 
   // direct 트래픽 (제외 대상)
   let directUsers = 0;
-  Object.entries(gaBy).forEach(([sm, u]) => {
-    if (/\(direct\)|\(not set\)|data not available/i.test(sm)) directUsers += u;
+  Object.entries(gaBy).forEach(([key, u]) => {
+    if (key === '직접' || /\(direct\)|\(not set\)|data not available/i.test(key)) directUsers += u;
   });
 
   // 광고 CPA
