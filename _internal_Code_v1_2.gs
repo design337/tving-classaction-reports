@@ -310,8 +310,9 @@ function _appendDataToSheets(ss, data) {
     }
 
     // 캠페인 필터 — tving / 티빙 포함만 통과
-    // GA4 시트는 이미 우리 프로젝트의 이벤트 데이터이므로 필터 skip (Kakao/오가닉/리퍼럴 등도 포함)
-    const skipFilterForGA = sheetName === 'GA4_티빙 집단소송 신청하기' || sheetName === 'GA4_Raw';
+    // GA4_티빙 집단소송 신청하기 = 신청 의도자 전수 (모든 채널 — 카카오/오가닉/리퍼럴/직접/AI/광고)
+    // GA4_Raw = 광고 캠페인 트래픽 추적 (티빙 캠페인 매칭만, 필터 유지)
+    const skipFilterForGA = sheetName === 'GA4_티빙 집단소송 신청하기';
     const filtered = skipFilterForGA ? incoming.slice() : incoming.filter(r => _isProjectCampaign(r));
 
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
