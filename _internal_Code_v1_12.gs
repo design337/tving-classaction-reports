@@ -1041,7 +1041,7 @@ function _publishToGithub(path, html, commitMsg) {
 // ============================================================================
 
 // === 메타 시트 active 필터링 (v1.1.12) ===
-// '게재 상태' 컬럼 값이 'active' (대소문자 무관)인 row만 보존
+// cost > 0 OR 노출 > 0 인 row만 보존 (실제 운영된 광고)
 function _filterActiveMeta() {
   const sheet = _ss().getSheetByName('메타_광고');
   if (!sheet) return {ok: false, error: 'sheet not found'};
@@ -1053,32 +1053,26 @@ function _filterActiveMeta() {
   const headers = data[0];
   const rows = data.slice(1);
 
-  const idxStatus = headers.indexOf('게재 상태');
-  const idxDate = headers.indexOf('일');
   const idxCost = headers.indexOf('지출 금액 (KRW)');
-  if (idxStatus < 0) return {ok: false, error: 'no "게재 상태" column'};
+  const idxImp = headers.indexOf('노출');
+  const idxDate = headers.indexOf('일');
+  if (idxCost < 0 || idxImp < 0) return {ok: false, error: 'cost/imp column not found'};
 
-  // 상태 값 분포
-  const dist = {};
-  for (const r of rows) {
-    const v = String(r[idxStatus] || '').trim().toLowerCase();
-    dist[v || '(empty)'] = (dist[v || '(empty)'] || 0) + 1;
-  }
+  const num = v => {
+    if (v === null || v === undefined || v === '') return 0;
+    const s = String(v).replace(/,/g,'');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  };
 
-  // active만 보존
-  const active = rows.filter(r => {
-    const v = String(r[idxStatus] || '').trim().toLowerCase();
-    return v === 'active';
-  });
+  const active = rows.filter(r => num(r[idxCost]) > 0 || num(r[idxImp]) > 0);
 
-  // 일자 분포
   const dateDist = {};
   for (const r of active) {
     const d = _normDate(r[idxDate]);
     dateDist[d] = (dateDist[d] || 0) + 1;
   }
 
-  // 시트 재기록
   sheet.getRange(2, 1, lr - 1, lc).clearContent();
   if (active.length > 0) {
     sheet.getRange(2, 1, active.length, lc).setValues(active);
@@ -1089,7 +1083,7 @@ function _filterActiveMeta() {
     before: rows.length,
     after: active.length,
     removed: rows.length - active.length,
-    statusDistribution: dist,
+    rule: 'cost > 0 OR 노출 > 0',
     dateDistribution: dateDist
   };
 }
