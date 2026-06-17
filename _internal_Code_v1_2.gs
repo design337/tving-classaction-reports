@@ -2403,6 +2403,7 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<div class="subtitle">' + subtitle + '</div>'
     + '<div class="kpi-grid">'
     + '<div class="kpi-cover"><div class="label">총 광고비</div><div class="value">₩' + _fmt0(adCost) + ' <span class="unit">KRW</span></div></div>'
+    + '<div class="kpi-cover"><div class="label">총 노출</div><div class="value">' + _fmt0((meta.imp||0) + (naver.imp||0) + (google.imp||0)) + '</div></div>'
     + '<div class="kpi-cover"><div class="label">총 클릭</div><div class="value">' + _fmt0(reportClicks) + '</div></div>'
     + '<div class="kpi-cover"><div class="label">GA 신청 (광고)</div><div class="value">' + _fmt0(totalAd) + '</div></div>'
     + '<div class="kpi-cover"><div class="label">광고 CPA</div><div class="value">₩' + _fmt0(adCPA) + ' <span class="unit">/신청</span></div></div>'
@@ -2786,6 +2787,11 @@ body {
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
   margin: 20px 0 18px;
+}
+.cover .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
 }
 .cover .kpi-cover {
   background: rgba(255,255,255,0.06);
