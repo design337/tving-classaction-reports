@@ -2405,8 +2405,8 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<div class="kpi-cover"><div class="label">총 광고비</div><div class="value">₩' + _fmt0(adCost) + ' <span class="unit">KRW</span></div></div>'
     + '<div class="kpi-cover"><div class="label">총 노출</div><div class="value">' + _fmt0((meta.imp||0) + (naver.imp||0) + (google.imp||0)) + '</div></div>'
     + '<div class="kpi-cover"><div class="label">총 클릭</div><div class="value">' + _fmt0(reportClicks) + '</div></div>'
-    + '<div class="kpi-cover"><div class="label">GA 신청 (광고)</div><div class="value">' + _fmt0(totalAd) + '</div></div>'
-    + '<div class="kpi-cover"><div class="label">광고 CPA</div><div class="value">₩' + _fmt0(adCPA) + ' <span class="unit">/신청</span></div></div>'
+    + '<div class="kpi-cover"><div class="label">신청자<span style="font-size:6pt;opacity:0.7;"> (직접 제외)</span></div><div class="value">' + _fmt0(totalAd + totalNonAd) + '</div></div>'
+    + '<div class="kpi-cover"><div class="label">CPA</div><div class="value">₩' + _fmt0((totalAd + totalNonAd) > 0 ? adCost / (totalAd + totalNonAd) : 0) + ' <span class="unit">/신청</span></div></div>'
     + '</div>'
     + '<div class="meta">발행 · ' + new Date().toLocaleDateString('ko-KR') + ' · ' + CONFIG.AUTHOR + ' · ' + CONFIG.CLIENT + '</div>'
     + '</section>';
@@ -2435,14 +2435,15 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<div class="callout"><span class="title">📌 핵심 메시지</span>'
     + dateLabel + ' 광고비 <b>₩' + _fmt0(adCost) + '</b>(' + _dod(adCost, prevAdCost) + ') '
     + '클릭 <b>' + _fmt0(reportClicks) + '</b>(' + _dod(reportClicks, (prev?prev.kpi.totalClk:0)) + ') '
-    + '광고 신청 <b>' + _fmt0(totalAd) + '명</b>(' + _dod(totalAd, prevTotalAd) + '). '
+    + '<b>신청자 ' + _fmt0(totalAd + totalNonAd) + '명*</b>(' + _dod(totalAd + totalNonAd, prevTotalAd + prevTotalNonAd) + '). '
     + '핵심 전환 채널 <span class="tag naver">네이버SA</span> ' + _fmt0(cls.naver) + '명. '
     + '<span class="tag meta">메타</span> ' + _fmt0(cls.meta) + '명 — <b>일부 신규 소재는 머신러닝 학습 진행 중</b>. '
     + '카카오 알림톡 ' + _fmt0(cls.kakao) + '명.'
     + '</div>'
-    + '<div class="section-narrative">광고 CPA <b>₩' + _fmt0(adCPA) + '</b>(' + _dod(adCPA, prevAdCPA) + ' vs 전일 ₩' + _fmt0(prevAdCPA) + '). '
-    + '비광고 신청(직접 제외) <b>' + _fmt0(totalNonAd) + '명*</b>(' + _dod(totalNonAd, prevTotalNonAd) + ') — 카카오 알림톡 + 네이버 referral이 주도.<br/>'
-    + '<span style="font-size:7pt;color:#94A3B8;">* 직접(direct) 트래픽 ' + _fmt0(directUsers) + '명 일부는 카카오 알림톡 UTM 누락분으로 추정 — 실제 카카오 채널 기여는 더 클 가능성</span>'
+    + '<div class="section-narrative">CPA <b>₩' + _fmt0((totalAd + totalNonAd) > 0 ? adCost / (totalAd + totalNonAd) : 0) + '</b>(광고비 / 신청자, 직접 제외). '
+    + '내역: 광고 채널 ' + _fmt0(totalAd) + '명(네이버SA ' + _fmt0(cls.naver) + ' / 메타 ' + _fmt0(cls.meta) + '), '
+    + '비광고 채널 ' + _fmt0(totalNonAd) + '명(카카오/오가닉/리퍼럴/AI/기타 합산).<br/>'
+    + '<span style="font-size:7pt;color:#94A3B8;">* 신청자는 GA 직접(direct) 채널 ' + _fmt0(directUsers) + '명 제외 — 일부는 카카오 알림톡 UTM 누락분 추정</span>'
     + '</div></div></section>';
 
   // SECTION 02 — KPI 스냅샷
@@ -2462,11 +2463,11 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + _v12KpiCard('총 클릭', _fmt0(reportClicks), reportClicks, (prev?prev.kpi.totalClk:0), _fmt0(prev?prev.kpi.totalClk:0))
     + _v12KpiCardPt('평균 CTR', ctr.toFixed(2) + '%', ctr, prevCtr)
     + _v12KpiCard('평균 CPC', '₩' + _fmt0(cpc), cpc, prevCpc, '₩' + _fmt0(prevCpc), true)
-    + _v12KpiCard('광고 신청자', _fmt0(totalAd), totalAd, prevTotalAd, _fmt0(prevTotalAd))
-    + _v12KpiCard('광고 CPA', '₩' + _fmt0(adCPA), adCPA, prevAdCPA, '₩' + _fmt0(prevAdCPA), true)
-    + _v12KpiCard('비광고 신청*', _fmt0(totalNonAd), totalNonAd, prevTotalNonAd, _fmt0(prevTotalNonAd) + ' (직접 제외)')
+    + _v12KpiCard('신청자*', _fmt0(totalAd + totalNonAd), totalAd + totalNonAd, prevTotalAd + prevTotalNonAd, _fmt0(prevTotalAd + prevTotalNonAd) + ' (직접 제외)')
+    + _v12KpiCard('CPA', '₩' + _fmt0((totalAd + totalNonAd) > 0 ? adCost / (totalAd + totalNonAd) : 0), (totalAd + totalNonAd) > 0 ? adCost / (totalAd + totalNonAd) : 0, (prevTotalAd + prevTotalNonAd) > 0 ? prevAdCost / (prevTotalAd + prevTotalNonAd) : 0, '광고비 / 신청자', true)
+    + _v12KpiCard('광고 채널 신청', _fmt0(totalAd), totalAd, prevTotalAd, _fmt0(prevTotalAd) + ' (메타+네이버SA)')
     + '</div>'
-    + '<p style="font-size:7pt;color:#94A3B8;margin-top:10px;">* GA 직접(direct) 채널 제외 식별 가능 채널 기준. 직접 ' + _fmt0(directUsers) + '명 중 일부는 카카오 알림톡 UTM 누락분 추정.</p>'
+    + '<p style="font-size:7pt;color:#94A3B8;margin-top:10px;">* 신청자는 GA 직접(direct) 채널 ' + _fmt0(directUsers) + '명 제외 — 일부는 카카오 알림톡 UTM 누락분 추정. CPA는 광고비 ÷ 전체 신청자(직접 제외).</p>'
     + '</div></section>';
 
   // SECTION 03 — 채널별 광고 성과
