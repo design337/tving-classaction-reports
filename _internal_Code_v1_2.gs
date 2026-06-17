@@ -589,9 +589,9 @@ function _buildStrategicAnalysis(agg, history, startDate, endDate) {
 
   // 핵심 채널 식별
   const channels = [
-    {name: '메타', cost: agg.meta.cost, clk: agg.meta.clk},
-    {name: '네이버SA', cost: agg.naver.cost, clk: agg.naver.clk},
-    {name: '구글', cost: agg.google.cost, clk: agg.google.clk}
+    {name: '메타', cost: agg.meta.cost, clk: agg.meta.clk, imp: agg.meta.imp},
+    {name: '네이버SA', cost: agg.naver.cost, clk: agg.naver.clk, imp: agg.naver.imp},
+    {name: '구글', cost: agg.google.cost, clk: agg.google.clk, imp: agg.google.imp}
   ];
   channels.sort((a,b) => b.cost - a.cost);
   const mainChannel = channels[0].name;
