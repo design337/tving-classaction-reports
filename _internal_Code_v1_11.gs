@@ -1112,6 +1112,10 @@ function _normalizeMetaSheet() {
     maxDate = _normDate(cleaned[cleaned.length - 1][idxDate]);
   }
 
+  // 메타 정규화 후 다른 시트들도 일자 정렬
+  let sortResult;
+  try { sortResult = _sortAllSheetsByDate(); } catch (e) { sortResult = {error: String(e)}; }
+
   return {
     ok: true,
     before: rows.length,
@@ -1119,7 +1123,8 @@ function _normalizeMetaSheet() {
     removedEmpty,
     removedNoise,
     normalizedCampaign: NORM_CAMP,
-    dateRange: minDate + '~' + maxDate
+    dateRange: minDate + '~' + maxDate,
+    sortAllSheets: sortResult
   };
 }
 
