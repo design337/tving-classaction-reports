@@ -3046,3 +3046,16 @@ function _yesterday(dateStr) {
   d.setDate(d.getDate() - 1);
   return _fmt(d);
 }
+
+function _shortDate(d) {
+  const parts = String(d).split('-');
+  return parts.length === 3 ? parseInt(parts[1]) + '/' + parseInt(parts[2]) : d;
+}
+
+function _chTagClass(ch) {
+  if (/메타/.test(ch)) return 'meta';
+  if (/네이버/.test(ch)) return 'naver';
+  if (/구글/.test(ch)) return 'google';
+  if (/카카오/.test(ch)) return 'meta';
+  return 'ga';
+}
