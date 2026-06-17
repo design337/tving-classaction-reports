@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>티빙 블로그 채널 성과 보고서 (6/16)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', 'Noto Sans CJK KR', -apple-system, sans-serif;
+  font-size: 9pt;
+  line-height: 1.55;
+  color: #7C2D5A;
+  background: #FFFFFF;
+}
+.page-wrap { max-width: 900px; margin: 0 auto; padding: 24px 18px; }
+@page { size: A4; margin: 14mm 12mm 16mm 12mm; }
+@page :first { margin: 0; }
+
+/* ---- Cover ---- */
+.cover {
+  page-break-after: always;
+  break-after: page;
+  background: linear-gradient(135deg, #7C2D5A 0%, #3D1029 100%);
+  color: #FFFFFF;
+  padding: 48px 36px;
+  border-radius: 8px;
+  margin-bottom: 28px;
+}
+.cover .wf-tag,
+.cover .mode-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 12px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.cover .wf-tag { background: rgba(123,104,174,0.20); color: #D6CEF0; margin-bottom: 6px; }
+.cover .mode-badge { background: rgba(59,130,246,0.20); color: #BFD7FF; margin-left: 6px; margin-bottom: 6px; }
+.cover h1 {
+  margin: 6px 0 4px;
+  font-size: 28pt;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  color: #FFFFFF;
+}
+.cover .subtitle { font-size: 12pt; font-weight: 300; color: #CBD5E1; margin-bottom: 14px; }
+.cover .divider {
+  width: 48px;
+  height: 2px;
+  background: #7B68AE;
+  margin: 14px 0 22px;
+}
+.cover .kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 20px 0 18px;
+}
+.cover .kpi-cover {
+  background: rgba(255,255,255,0.06);
+  border-left: 3px solid #7B68AE;
+  padding: 10px 12px;
+  border-radius: 0 4px 4px 0;
+}
+.cover .kpi-cover .label { font-size: 6.5pt; color: #94A3B8; font-weight: 500; letter-spacing: 0.4px; }
+.cover .kpi-cover .value { font-size: 15pt; font-weight: 700; color: #FFFFFF; margin-top: 2px; }
+.cover .kpi-cover .unit  { font-size: 7.5pt; font-weight: 400; color: #CBD5E1; }
+.cover .meta { font-size: 7.5pt; color: #94A3B8; margin-top: 14px; }
+
+/* ---- TOC ---- */
+.toc {
+  page-break-after: always;
+  break-after: page;
+  padding: 12px 4px 24px;
+}
+.toc h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #7C2D5A;
+  border-bottom: 2px solid #7B68AE;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+}
+.toc ol { margin: 0; padding-left: 20px; }
+.toc li { margin: 4px 0; font-size: 9.5pt; color: #5A6478; }
+.toc li strong { color: #7C2D5A; }
+
+/* ---- Section header (dark box) ---- */
+.section {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin: 22px 0 12px;
+}
+.section-header {
+  background: #7C2D5A;
+  padding: 10px 14px;
+  border-radius: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.section-header .sec-num {
+  color: #7B68AE;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.section-header .sec-title {
+  color: #FFFFFF;
+  font-size: 11pt;
+  font-weight: 700;
+}
+.section-header .sec-subtitle {
+  color: #CBD5E1;
+  font-size: 8pt;
+  font-weight: 400;
+}
+.section-body { padding: 12px 4px 6px; }
+
+/* ---- KPI cards (in body) ---- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+.kpi-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-left: 3px solid #7B68AE;
+  padding: 10px 12px;
+  border-radius: 4px;
+}
+.kpi-card .label { font-size: 7pt; color: #5A6478; font-weight: 500; letter-spacing: 0.4px; }
+.kpi-card .value { font-size: 14pt; font-weight: 700; color: #7C2D5A; margin-top: 2px; }
+.kpi-card .unit  { font-size: 7.5pt; font-weight: 400; color: #94A3B8; margin-top: 1px; }
+.kpi-card .delta { display: inline-block; margin-left: 4px; font-size: 7.5pt; font-weight: 700; }
+
+/* ---- Tables ---- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  margin: 6px 0 12px;
+  page-break-inside: avoid;
+}
+thead th {
+  background: #334155;
+  color: #FFFFFF;
+  font-size: 7.5pt;
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: left;
+  letter-spacing: 0.2px;
+}
+tbody td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #E2E8F0;
+  color: #7C2D5A;
+  vertical-align: middle;
+}
+tbody tr:nth-child(odd)  td { background: #FFFFFF; }
+tbody tr:nth-child(even) td { background: #F8FAFC; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.total td {
+  background: #7C2D5A !important;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* ---- Delta ---- */
+.up   { color: #C0392B; font-weight: 700; }
+.down { color: #1E3A8A; font-weight: 700; }
+.up-bad   { color: #C0392B; font-weight: 700; }
+.flat { color: #94A3B8; }
+.delta-note { font-size: 7pt; color: #94A3B8; font-style: italic; margin-left: 4px; }
+
+/* ---- Boxes ---- */
+.callout {
+  background: #E8E4F2;
+  border-left: 3px solid #7B68AE;
+  padding: 10px 14px;
+  border-radius: 0 4px 4px 0;
+  margin: 8px 0 12px;
+  font-size: 8.5pt;
+  line-height: 1.7;
+}
+.callout strong { color: #5B4894; }
+.callout .title { font-size: 9pt; font-weight: 700; color: #5B4894; display: block; margin-bottom: 4px; }
+.callout-red {
+  background: #FDF0EE;
+  border-left: 3px solid #C0392B;
+  padding: 9px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 8.5pt;
+}
+.callout-red .title { color: #C0392B; font-weight: 700; }
+.callout-green {
+  background: #EAF4EE;
+  border-left: 3px solid #1A6644;
+  padding: 9px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 8.5pt;
+}
+.callout-green .title { color: #1A6644; font-weight: 700; }
+
+/* ---- Tags / priorities ---- */
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 7pt;
+  font-weight: 700;
+  margin-right: 4px;
+  letter-spacing: 0.3px;
+}
+.tag.p1 { background: #FDF0EE; color: #C0392B; }
+.tag.p2 { background: #FEF3C7; color: #B45309; }
+.tag.p3 { background: #E8E4F2; color: #5B4894; }
+.tag.meta  { background: #E8E4F2; color: #5B4894; }
+.tag.naver { background: #EAF4EE; color: #1A6644; }
+.tag.ga    { background: #DBEAFE; color: #1E40AF; }
+
+/* ---- Misc ---- */
+p { margin: 4px 0; }
+.note-empty { color: #94A3B8; font-size: 8pt; font-style: italic; }
+.section-narrative { font-size: 8.5pt; color: #5A6478; margin: 6px 0 10px; line-height: 1.7; }
+.divider-soft { border: 0; border-top: 1px solid #E2E8F0; margin: 16px 0; }
+
+/* ---- Footer ---- */
+.footer {
+  border-top: 1px solid #E2E8F0;
+  text-align: center;
+  margin-top: 28px;
+  padding: 14px 0 6px;
+  color: #94A3B8;
+  font-size: 6.5pt;
+  letter-spacing: 0.3px;
+}
+.footer .pgnum { margin-left: 6px; }
+
+@media print {
+  body { background: #FFFFFF; }
+  .page-wrap { padding: 0; max-width: 100%; }
+  .cover, .section-header, thead th, tr.total td, .callout, .callout-red, .callout-green, .kpi-card {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<!-- ============ COVER ============ -->
+<section class="cover">
+  <span class="wf-tag">TVING CLASS ACTION · BLOG REPORT</span>
+  <span class="mode-badge">2026-06-16</span>
+  <h1>티빙 집단소송 블로그</h1>
+  <div class="subtitle">블로그 채널 성과 보고서 (6/16) · 판다랭크 기반</div>
+  <div class="kpi-grid">
+    <div class="kpi-cover"><div class="label">총 방문수</div><div class="value">12,489 <span class="unit">명</span></div></div>
+    <div class="kpi-cover"><div class="label">유형 분류</div><div class="value">조회수 급등형 <span class="unit">🎢</span></div></div>
+    <div class="kpi-cover"><div class="label">주력 유입</div><div class="value">네이버 검색 <span class="unit">96%</span></div></div>
+    <div class="kpi-cover"><div class="label">주력 타깃</div><div class="value">25~29세 <span class="unit">여성</span></div></div>
+  </div>
+  <div class="meta">발행 · 2026-06-17 · 에이아이컨실리움 · 법무법인 더 에이치 황해</div>
+</section>
+
+<!-- ============ TOC ============ -->
+<section class="toc">
+  <h2>목차 / Contents</h2>
+  <ol>
+    <li><strong>핵심 결론</strong> — 블로그도 터졌다</li>
+    <li><strong>블로그 KPI 스냅샷</strong> — 방문수 · 조회수 · 게시글 · 유입 채널</li>
+    <li><strong>인기 게시글 TOP 3</strong> — 트래픽 견인 콘텐츠</li>
+    <li><strong>게시글 분석</strong> — 6가지 관찰 패턴</li>
+    <li><strong>방문 패턴</strong> — 요일별 · 주중 vs 주말</li>
+    <li><strong>사용자 인구통계</strong> — 25~29세 여성 압도적</li>
+    <li><strong>유입 채널 분석</strong> — 네이버 검색 96% 의존</li>
+    <li><strong>인사이트 & 액션 플랜</strong> — P1/P2/P3</li>
+  </ol>
+</section>
+
+<!-- ============ SECTION 01 — 핵심 결론 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 01</div>
+    <div class="sec-title">핵심 결론</div>
+    <div class="sec-subtitle">2026-06-16 · 블로그 채널 종합 평가</div>
+  </div>
+  <div class="section-body">
+    <div class="callout">
+      <span class="title">📌 핵심 메시지 — 블로그도 터졌다</span>
+      판다랭크 진단: <b>"조회수 급등 콜러코스터형 🎢"</b>. 총 방문 <b>12,489명</b> — 주력 유입 <span class="tag naver">네이버 검색 96%</span>으로 단일 채널 의존. 주력 방문자 <b>25~29세 여성</b>이 압도적. 인기 게시글 TOP 3 모두 <b>"티빙 개인정보 유출"</b> 키워드 — 광고 캠페인 키워드와 정확히 일치하여 <b>유료 광고와 SEO 시너지가 강하게 작동</b> 중.
+    </div>
+    <div class="section-narrative">
+      블로그가 단순 정보 페이지가 아니라 <b>광고 유입 외 비광고 신청자 245명(네이버 referral)을 직접 견인하는 채널</b>로 기능하고 있음 (티빙 메인 보고서 Section 05 참조). 블로그 트래픽은 광고비 0원 — ROI 무한대.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 02 — KPI 스냅샷 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 02</div>
+    <div class="sec-title">블로그 KPI 스냅샷</div>
+    <div class="sec-subtitle">판다랭크 진단 + 핵심 지표</div>
+  </div>
+  <div class="section-body">
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="label">총 방문수</div><div class="value">12,489</div><div class="delta up">▲ 급등</div><div class="delta-note">콜러코스터형 추세</div></div>
+      <div class="kpi-card"><div class="label">조회수 (예상)</div><div class="value">15,200+</div><div class="delta up">▲ 비례 상승</div><div class="delta-note">방문 대비 1.2x</div></div>
+      <div class="kpi-card"><div class="label">발행 게시글</div><div class="value">9건</div><div class="delta-note">티빙 집단소송 시리즈</div></div>
+      <div class="kpi-card"><div class="label">주력 유입 채널</div><div class="value">네이버 96%</div><div class="delta down">▼ 의존도 높음</div><div class="delta-note">단일 채널 리스크</div></div>
+      <div class="kpi-card"><div class="label">주력 연령</div><div class="value">25~29세</div><div class="delta-note">여성 비중 압도적</div></div>
+      <div class="kpi-card"><div class="label">방문 패턴</div><div class="value">주중 ↑</div><div class="delta-note">주중이 주말 압도</div></div>
+      <div class="kpi-card"><div class="label">TOP 게시글</div><div class="value">왕관 🏆</div><div class="delta-note">티빙 집단소송 사건자명단</div></div>
+      <div class="kpi-card"><div class="label">티빙 광고 시너지</div><div class="value">강력</div><div class="delta up">▲ ROI 무한대</div><div class="delta-note">광고비 0원 / 유입 발생</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 03 — 인기 게시글 TOP 3 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 03</div>
+    <div class="sec-title">인기 게시글 TOP 3</div>
+    <div class="sec-subtitle">트래픽 견인 콘텐츠 — 왕관 표시 = 1위</div>
+  </div>
+  <div class="section-body">
+    <table>
+      <tr><th>순위</th><th>게시글 제목</th><th>주요 키워드</th><th class="num">방문 비중</th><th>패턴</th></tr>
+      <tr><td><b>🏆 1위</b></td><td><b>티빙 개인정보 유출 사건자명단</b></td><td>사건자명단 / 명단 / 확인</td><td class="num">~35%</td><td><span class="tag p1">최강 후킹</span></td></tr>
+      <tr><td>🥈 2위</td><td>티빙 개인정보 유출 집단소송에 참여하다</td><td>집단소송 / 참여 / 신청</td><td class="num">~25%</td><td><span class="tag p2">전환 유도</span></td></tr>
+      <tr><td>🥉 3위</td><td>티빙 개인정보 유출 보상금</td><td>보상금 / 손해배상 / 금액</td><td class="num">~20%</td><td><span class="tag p2">의사결정 단계</span></td></tr>
+    </table>
+    <div class="callout callout-green"><span class="title">🏆 1위 인사이트 — "사건자명단" 검색 의도</span>"내가 사건자에 포함됐는지" 즉시 확인하려는 <b>강력한 즉답형 검색 의도</b>. 단순 정보 검색이 아니라 <b>피해자 본인 확인</b>이 목적. 신청 전환율도 높을 가능성. 유사 변형 ("확인 방법", "조회 방법") 게시글 추가 권장.</div>
+  </div>
+</section>
+
+<!-- ============ SECTION 04 — 게시글 분석 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 04</div>
+    <div class="sec-title">게시글 분석</div>
+    <div class="sec-subtitle">판다랭크가 관찰한 6가지 패턴</div>
+  </div>
+  <div class="section-body">
+    <table>
+      <tr><th>#</th><th>관찰 패턴</th><th>의미</th></tr>
+      <tr><td>1</td><td>주중 조회 급증 — 개인정보 유출 관련 평일 검색 강세</td><td>직장인·경제활동 인구가 주요 독자층</td></tr>
+      <tr><td>2</td><td>일별 그래프 — 개인정보 유출 보상금을 검색하는 사람 증가</td><td>보상금 관심도가 점진 상승</td></tr>
+      <tr><td>3</td><td>부모님 떠올린 후 개인정보를 떠올리는 사람들</td><td>가족 단위 검색 — 본인 외 부모 명의 피해 확인</td></tr>
+      <tr><td>4</td><td>검색어 패턴 — "확인", "명단", "보상" 키워드 집중</td><td>의사결정 직전 즉답형 검색</td></tr>
+      <tr><td>5</td><td>피해 사실 확인 후 후속 행동 검색</td><td>"신청 방법" → "신청 사이트" 순서로 진입</td></tr>
+      <tr><td>6</td><td>광고 캠페인 키워드와 정확히 일치하는 검색 유입</td><td>유료 광고 + SEO 시너지 강력</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ SECTION 05 — 방문 패턴 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 05</div>
+    <div class="sec-title">방문 패턴 — 요일별</div>
+    <div class="sec-subtitle">주중 vs 주말 · 12,489명 분포</div>
+  </div>
+  <div class="section-body">
+    <table>
+      <tr><th>구분</th><th class="num">방문 비중</th><th class="num">방문수 (추정)</th><th>관찰</th></tr>
+      <tr><td><b>주중 (월~금)</b></td><td class="num">~82%</td><td class="num">~10,240명</td><td><span class="tag p1">압도적</span> — 평일 직장인·학생 검색</td></tr>
+      <tr><td>주말 (토~일)</td><td class="num">~18%</td><td class="num">~2,249명</td><td><span class="tag p3">상대적 저조</span></td></tr>
+    </table>
+    <div class="callout"><span class="title">🎢 콜러코스터형 패턴</span>방문수가 일간 변동 폭이 크고 특정 날짜에 급등 → 특정 키워드 검색 폭주 / 미디어 노출 / SNS 확산 등 외부 이슈에 민감. <b>판다랭크 분류:</b> "조회수 급등 콜러코스터형" — 안정형이 아닌 이벤트형 트래픽.</div>
+  </div>
+</section>
+
+<!-- ============ SECTION 06 — 사용자 인구통계 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 06</div>
+    <div class="sec-title">사용자 인구통계</div>
+    <div class="sec-subtitle">25~29세 여성 압도적</div>
+  </div>
+  <div class="section-body">
+    <table>
+      <tr><th>연령대</th><th>성별</th><th class="num">방문 비중 (추정)</th><th>특징</th></tr>
+      <tr><td><b>25~29세</b></td><td><b>여성</b></td><td class="num">~45%</td><td><span class="tag p1">압도적 1위</span> — 티빙 주력 사용층 + 정보 민감도 높음</td></tr>
+      <tr><td>30~34세</td><td>여성</td><td class="num">~18%</td><td>출산·육아기 — 개인정보 보호 관심도 높음</td></tr>
+      <tr><td>25~29세</td><td>남성</td><td class="num">~12%</td><td>OTT 사용자 + 보상금 관심</td></tr>
+      <tr><td>30~34세</td><td>남성</td><td class="num">~10%</td><td>가장 — 가족 명의 피해 확인</td></tr>
+      <tr><td>35~39세</td><td>여성</td><td class="num">~8%</td><td>—</td></tr>
+      <tr><td>기타</td><td>—</td><td class="num">~7%</td><td>20대 초반 / 40대 이상</td></tr>
+    </table>
+    <div class="callout callout-green"><span class="title">💡 25~29세 여성 압도적인 이유</span>티빙(TVING) 주력 가입자 인구 분포 + 개인정보 유출 사건에 대한 정보 민감도 + 모바일 검색·SNS 활용도 모두 가장 높음. <b>이 타깃 맞춤 콘텐츠 추가 권장</b>: "20대 여성이 알아야 할 개인정보 유출 대응법" 등.</div>
+  </div>
+</section>
+
+<!-- ============ SECTION 07 — 유입 채널 분석 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 07</div>
+    <div class="sec-title">유입 채널 분석</div>
+    <div class="sec-subtitle">"내 블로그 사람들이 어떻게 찾았어?" — 채널별 분포</div>
+  </div>
+  <div class="section-body">
+    <table>
+      <tr><th>채널</th><th class="num">비중</th><th>상세</th></tr>
+      <tr><td><span class="tag naver">네이버 검색</span></td><td class="num"><b>96%</b></td><td>주력 키워드: "티빙 개인정보 유출 사건자명단" / "티빙 집단소송" / "보상금"</td></tr>
+      <tr><td><b>다음 / 기타</b></td><td class="num">4%</td><td>다음 검색 + 카페·블로그 referral</td></tr>
+      <tr><td>구글 검색</td><td class="num">0%</td><td>구글 검색 노출 거의 없음 — SEO 최적화 미흡</td></tr>
+    </table>
+    <div class="callout callout-red"><span class="title">⚠️ 단일 채널 96% 의존 — 리스크</span>네이버 알고리즘 변경 시 트래픽 급락 가능성. <b>채널 다변화 필수</b>: 다음 카카오뷰 / 구글 SEO 강화 / 인스타·X(트위터) 등 SNS 공유.</div>
+    <div class="callout"><span class="title">🔗 티빙 광고와의 시너지</span>네이버 검색 키워드가 광고 캠페인 키워드와 정확히 일치. <b>티빙 메인 보고서</b> Section 05의 "네이버 referral 245명(+1,650%)"의 일부가 본 블로그 트래픽 → 유료 광고가 일으킨 관심이 블로그로 이어지고 블로그가 다시 신청 사이트로 전환시키는 <b>3단 깔때기 작동 중</b>.</div>
+  </div>
+</section>
+
+<!-- ============ SECTION 08 — 인사이트 & 액션 ============ -->
+<section class="section">
+  <div class="section-header">
+    <div class="sec-num">SECTION 08</div>
+    <div class="sec-title">인사이트 & 액션 플랜</div>
+    <div class="sec-subtitle">관찰 · 원인 · 액션 · 우선순위</div>
+  </div>
+  <div class="section-body">
+    <h3>🔍 인사이트</h3>
+    <div class="callout">
+      <span class="title">[1] 1위 게시글 "사건자명단" — 즉답형 검색 의도</span>
+      방문자는 본인 명의 피해 확인을 위해 명단 검색 → 즉시 신청 사이트로 이동 가능성.<br/>
+      <b>원인:</b> "내가 피해자인가" 즉답형 욕구<br/>
+      <b>액션:</b> 명단 게시글에 신청 사이트 CTA 버튼 + 명단 변형 게시글 ("확인 방법", "조회 사이트") 추가
+    </div>
+    <div class="callout">
+      <span class="title">[2] 25~29세 여성 압도적 — 타깃 맞춤 콘텐츠 부족</span>
+      방문자 ~45%가 25~29세 여성인데 콘텐츠는 일반 정보형. 타깃에 맞춰 깊게 들어가지 않음.<br/>
+      <b>원인:</b> 콘텐츠 톤이 일반 정보 / 법률 어조<br/>
+      <b>액션:</b> 20대 여성 친화 톤 + 인스타 캡처 가능한 카드뉴스 형식 게시글 2~3개 추가
+    </div>
+    <div class="callout callout-red">
+      <span class="title">[3] 네이버 96% 단일 채널 의존 — 리스크 + 기회</span>
+      네이버 알고리즘 변경 / 검색 트렌드 이탈 시 즉시 트래픽 급락 가능. 동시에 다른 채널은 미개척.<br/>
+      <b>원인:</b> SEO 외 채널 미운영<br/>
+      <b>액션:</b> 다음 카카오뷰 + 구글 SEO + X / 인스타 시리즈 동시 운영
+    </div>
+    <div class="callout">
+      <span class="title">[4] 콜러코스터형 — 안정 트래픽 부족</span>
+      특정 키워드 검색 폭주에만 의존. 일상적 안정 트래픽 거의 없음.<br/>
+      <b>원인:</b> 이벤트형 콘텐츠만 발행 — 상시 검색 키워드 미커버<br/>
+      <b>액션:</b> 상시 검색 키워드 ("개인정보 보호", "OTT 보안") 기반 정보성 게시글 3개 추가 — 트래픽 베이스라인 구축
+    </div>
+    <div class="callout callout-green">
+      <span class="title">[5] 광고 시너지 강력 — 3단 깔때기 작동</span>
+      유료 광고 → 검색 키워드 인지 → 블로그 진입 → 신청 사이트 전환. 광고비 ₩0인 블로그가 광고 ROI 증폭기 역할.<br/>
+      <b>원인:</b> 광고 키워드와 블로그 SEO 키워드 정확히 일치<br/>
+      <b>액션:</b> 광고 신규 캠페인 키워드 (예: "CI 유출") 발표 시 동시에 블로그 게시글도 발행 — 광고비 ROI 30% 이상 추가 상승 예상
+    </div>
+
+    <h3 style="margin-top:20px;">⚡ 액션 플랜</h3>
+    <table>
+      <tr><th>우선순위</th><th>영역</th><th>실행 항목</th><th>실행 시점</th></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>콘텐츠</td><td>1위 게시글 "사건자명단" 변형 2개 추가 (확인 방법 / 조회 사이트) + 신청 CTA 강화</td><td>이번 주</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>타깃</td><td>25~29세 여성 친화 카드뉴스형 게시글 3개 발행</td><td>이번 주</td></tr>
+      <tr><td><span class="tag p1">P1</span></td><td>광고 연동</td><td>광고 신규 키워드 발표 시 블로그 게시글 동시 발행 워크플로 구축</td><td>익영업일</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>채널 다변화</td><td>다음 카카오뷰 등록 + 구글 SEO 최적화 (meta description / heading 정비)</td><td>2주 내</td></tr>
+      <tr><td><span class="tag p2">P2</span></td><td>SNS</td><td>X / 인스타 카드뉴스 시리즈 시작 — 블로그 게시글 재포장</td><td>2주 내</td></tr>
+      <tr><td><span class="tag p3">P3</span></td><td>안정 트래픽</td><td>상시 검색 키워드 기반 정보성 게시글 3개 발행 — 베이스라인 구축</td><td>다음 달</td></tr>
+      <tr><td><span class="tag p3">P3</span></td><td>측정</td><td>판다랭크 일간 모니터링 + 네이버 알고리즘 변경 알림 설정</td><td>지속</td></tr>
+    </table>
+  </div>
+</section>
+
+<div class="footer">
+  에이아이컨실리움 · 법무법인 더 에이치 황해 · CONFIDENTIAL · 6/16 블로그 채널 성과 보고서 (판다랭크 기반)
+  <span class="pgnum"> — 인쇄용 A4</span>
+</div>
+
+</div>
+</body>
+</html>
