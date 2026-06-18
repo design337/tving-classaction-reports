@@ -2422,7 +2422,6 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     '<li><strong>채널별 광고 성과</strong> — ' + (showGoogle ? '메타 / 네이버SA / 구글' : '메타 / 네이버SA') + ' + 전일 대비</li>',
     '<li><strong>네이버 SA 키워드 효율</strong> — TOP + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>GA4 신청 채널 분석</strong> — 광고 vs 비광고 (직접 제외) + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
-    '<li><strong>카카오톡 재신청 패턴</strong> — Source별 + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>메타 광고 캠페인 성과</strong> — 광고세트별 광고비/CTR/CPC + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>모바일 vs PC</strong> — 디바이스별 + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>마케팅 히스토리</strong> — 기간 내 캠페인 변경</li>',
@@ -2567,35 +2566,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<div class="callout"><span class="title">📌 측정 메모 — 직접(direct) 트래픽 일부는 카카오 알림톡일 가능성</span>GA `(direct)` 트래픽 <b>' + _fmt0(directUsers) + '명</b> 중 일부는 카카오 알림톡 발송 시 <b>UTM 누락된 분으로 추정</b>. 측정 정확도를 위해 향후 모든 알림톡 발송 시 UTM 필수 부착 필요.</div>'
     + '</div></section>';
 
-  // SECTION 06 — 카카오 재신청
+  // SECTION 06 — 메타 광고 캠페인 (이전 SECTION 07, 카카오 섹션 제거됨)
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 06</div><div class="sec-title">카카오톡 재신청 패턴 분석</div>'
-    + '<div class="sec-subtitle">Source 세분화 + ' + (isWeekly?'WoW':'DoD') + ' + 재방문 추정</div>'
-    + '</div><div class="section-body"><table>'
-    + '<tr><th>Kakao source</th><th>의미</th><th class="num">' + _shortDate(endDate) + ' 사용자</th><th class="num">' + (isWeekly?'전주':'전일') + '</th><th class="num">' + (isWeekly?'WoW':'DoD') + '</th><th class="num">이벤트</th><th>재방문 신호</th></tr>';
-  const prevKakao = (prev && prev._kakao && prev._kakao.sources) || [];
-  const prevKakaoMap = {};
-  prevKakao.forEach(s => { prevKakaoMap[s.sm] = s.users; });
-  kakaoData.sources.forEach(s => {
-    const prevU = prevKakaoMap[s.sm] || 0;
-    let label = '카카오 일반';
-    if (/crm_alimtalk/i.test(s.sm)) label = 'CRM 알림톡 (기존 신청자 대상)';
-    else if (/2nd_alimtalk/i.test(s.sm)) label = '<b>2차 알림톡 (재신청 명시)</b>';
-    else if (/kakao_menu/i.test(s.sm)) label = '카카오 메뉴 직접 진입';
-    else if (/defect/i.test(s.sm)) label = '결함 메인';
-    const signal = s.isStrong ? '<span class="tag p1">매우 강력</span>' : (s.isReVisit ? '<span class="tag p2">강력</span>' : '—');
-    html += '<tr><td>' + s.sm + '</td><td>' + label + '</td><td class="num">' + s.users + '</td><td class="num">' + prevU + '</td><td class="num ' + _dodCls(s.users, prevU) + '">' + _dod(s.users, prevU) + '</td><td class="num">' + s.events + '</td><td>' + signal + '</td></tr>';
-  });
-  const prevKakaoTotal = prevKakao.reduce((s,k)=>s+k.users, 0);
-  html += '<tr class="total"><td colspan="2">카카오 전체</td><td class="num">' + kakaoData.total + '</td><td class="num">' + prevKakaoTotal + '</td><td class="num ' + _dodCls(kakaoData.total, prevKakaoTotal) + '">' + _dod(kakaoData.total, prevKakaoTotal) + '</td><td class="num">—</td><td>—</td></tr>';
-  html += '</table>'
-    + '<div class="callout"><span class="title">🔁 재방문 추정</span>전체 카카오 ' + kakaoData.total + '명 중 재방문 추정률 <b>' + kakaoData.reVisitRate + '%</b>. crm_alimtalk + 2nd_alimtalk + kakao_menu가 기존 신청자 대상 발송 → 재방문 가능성 높음.</div>'
-    + '<div class="callout callout-red"><span class="title">⚠️ 측정 한계 — 표시 ' + kakaoData.total + '명은 UTM 부착 발송분만</span>실제 카카오 알림톡 신청자는 표시 수치보다 클 가능성. <b>일부 알림톡 발송 시 UTM 누락</b>으로 GA에서 `(direct)`로 분류된 트래픽 존재. 측정 정확도 개선을 위해 <b>모든 알림톡 발송 시 UTM 자동 부착 필수</b>.</div>'
-    + '</div></section>';
-
-  // SECTION 07 — 메타 광고 캠페인
-  html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 07</div><div class="sec-title">메타 광고 캠페인 성과</div>'
+    + '<div class="sec-num">SECTION 06</div><div class="sec-title">메타 광고 캠페인 성과</div>'
     + '<div class="sec-subtitle">광고세트별 분리 + 마케팅 히스토리 매칭</div>'
     + '</div><div class="section-body">';
   if (Object.keys(metaAds.setGroups).length === 0) {
@@ -2633,14 +2606,14 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   }
   html += '</div></section>';
 
-  // SECTION 08 — 모바일 vs PC
+  // SECTION 07 — 모바일 vs PC
   const moTotal = deviceData.mo.users;
   const pcTotal = deviceData.pc.users;
   const naverTotal = moTotal + pcTotal;
   const moCost = naverTotal > 0 ? (naver.cost||0) * moTotal / naverTotal : 0;
   const pcCost = naverTotal > 0 ? (naver.cost||0) * pcTotal / naverTotal : 0;
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 08</div><div class="sec-title">모바일 vs PC</div>'
+    + '<div class="sec-num">SECTION 07</div><div class="sec-title">모바일 vs PC</div>'
     + '<div class="sec-subtitle">디바이스별 신청 효율 + ' + (isWeekly?'WoW':'DoD') + '</div>'
     + '</div><div class="section-body"><table>'
     + '<tr><th>채널</th><th>디바이스</th><th class="num">' + _shortDate(endDate) + ' 신청</th><th class="num">' + (isWeekly?'전주':'전일') + '</th><th class="num">' + (isWeekly?'WoW':'DoD') + '</th><th class="num">광고비</th><th class="num">CPA</th><th class="num">비중</th></tr>'
@@ -2650,9 +2623,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<tr><td colspan="2">네이버 referral (모바일 검색)</td><td class="num">' + _fmt0(deviceData.referral.users) + '</td><td class="num">' + _fmt0(prevDevice.referral.users) + '</td><td class="num ' + _dodCls(deviceData.referral.users, prevDevice.referral.users) + '">' + _dod(deviceData.referral.users, prevDevice.referral.users) + '</td><td class="num">₩0</td><td class="num">—</td><td class="num">—</td></tr>'
     + '</table></div></section>';
 
-  // SECTION 09 — 마케팅 히스토리
+  // SECTION 08 — 마케팅 히스토리
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 09</div><div class="sec-title">마케팅 히스토리</div>'
+    + '<div class="sec-num">SECTION 08</div><div class="sec-title">마케팅 히스토리</div>'
     + '<div class="sec-subtitle">기간 내 캠페인 변경 사항 (마케팅 히스토리 시트)</div>'
     + '</div><div class="section-body">';
   if (history && history.length > 0) {
@@ -2673,9 +2646,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   }
   html += '</div></section>';
 
-  // SECTION 10 — 인사이트 & 액션
+  // SECTION 09 — 인사이트 & 액션
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 10</div><div class="sec-title">인사이트 & 액션 플랜</div>'
+    + '<div class="sec-num">SECTION 09</div><div class="sec-title">인사이트 & 액션 플랜</div>'
     + '<div class="sec-subtitle">관찰 · 원인 · 액션 · 우선순위</div>'
     + '</div><div class="section-body">';
   html += '<h3>🔍 인사이트</h3>';
