@@ -191,6 +191,9 @@ function _runFromJson(body) {
     } else if (rt.type === 'weekly') {
       const r = _publishWeeklyReport(ss, rt.weekStart, rt.weekEnd, history);
       results.push(r);
+    } else if (rt.type === 'monthly') {
+      const r = _publishMonthlyReport(ss, rt.monthStart, rt.monthEnd, history);
+      results.push(r);
     }
   }
 
@@ -248,22 +251,21 @@ function _normDate(d) {
 function _pad(n) { return n < 10 ? '0' + n : '' + n; }
 
 function _decideReportTypes(range) {
+  // v1.2.4 — 일/주/월 발행 정비
+  // 정책: 일자별 하나 / 주간(월~일) 한 번 / 월간(1일~말일) 한 번
   const types = [];
   // 일간: 모든 일자 각각
   types.push({type: 'daily', dates: range.dates});
 
-  // 주간: 7일 이상 또는 minDate ~ maxDate가 정확히 월~일 한 주
   const minD = new Date(range.minDate);
   const maxD = new Date(range.maxDate);
   const days = Math.round((maxD - minD) / 86400000) + 1;
 
+  // 주간: 7일 이상이거나 한 주(월~일)에 포함된 데이터
   if (days >= 7) {
-    // 주간 보고서 — minDate 포함 주의 월~일 기준
     const ws = _weekStart(minD);
     const we = _addDays(ws, 6);
     types.push({type: 'weekly', weekStart: _fmt(ws), weekEnd: _fmt(we)});
-
-    // 데이터가 여러 주 걸친 경우 마지막 완성 주도
     if (days >= 14) {
       const we2 = _weekStart(maxD);
       const we2end = _addDays(we2, 6);
@@ -272,6 +274,14 @@ function _decideReportTypes(range) {
       }
     }
   }
+
+  // 월간: 28일 이상 또는 minDate~maxDate가 한 달 포함
+  if (days >= 28) {
+    const mStart = new Date(maxD.getFullYear(), maxD.getMonth(), 1);
+    const mEnd = new Date(maxD.getFullYear(), maxD.getMonth() + 1, 0);
+    types.push({type: 'monthly', monthStart: _fmt(mStart), monthEnd: _fmt(mEnd)});
+  }
+
   return types;
 }
 
@@ -2157,6 +2167,9 @@ function _buildReportFromSheet(body) {
     }
   } else if (reportType === 'weekly' && dates.length >= 2) {
     results.push(_publishWeeklyReport(ss, dates[0], dates[dates.length-1], history));
+  } else if (reportType === 'monthly' && dates.length >= 2) {
+    // v1.2.4 — 월간 보고서 (dates[0]=monthStart, dates[1]=monthEnd)
+    results.push(_publishMonthlyReport(ss, dates[0], dates[dates.length-1], history));
   }
 
   // 종합지표 갱신 — zone1은 항상 CAMPAIGN_START ~ maxDate 전체 기간
@@ -3122,6 +3135,39 @@ function _publishWeeklyReport(ss, weekStart, weekEnd, history) {
   const url = _publishToGithub(path, built.html, '[bot] weekly report ' + weekStart + '~' + weekEnd + ' v1.2');
   _logReportToSheet('weekly', weekStart, weekEnd, url, built.title);
   return {weekStart, weekEnd, url, title: built.title};
+}
+
+// v1.2.4 — 월간 보고서
+function _publishMonthlyReport(ss, monthStart, monthEnd, history) {
+  const agg = _aggregateByDate(ss, monthStart, monthEnd);
+  const analysis = _buildStrategicAnalysis(agg, history, monthStart, monthEnd);
+
+  // 전월 데이터
+  const ms = new Date(monthStart + 'T00:00:00');
+  const prevMStart = new Date(ms.getFullYear(), ms.getMonth() - 1, 1);
+  const prevMEnd = new Date(ms.getFullYear(), ms.getMonth(), 0);
+  const prevStart = _fmt(prevMStart), prevEnd = _fmt(prevMEnd);
+  const prevAgg = _aggregateByDate(ss, prevStart, prevEnd);
+  const prevAnalysis = _buildStrategicAnalysis(prevAgg, history, prevStart, prevEnd);
+  prevAnalysis._gaByChannel = prevAgg.ga.byChannel || {};
+  prevAnalysis._kakao = _kakaoReturnAnalysis(ss, prevStart, prevEnd);
+  prevAnalysis._device = _deviceMobilePcAnalysis(ss, prevStart, prevEnd);
+  prevAnalysis._pay = _aggregatePayments(ss, prevStart, prevEnd);
+
+  analysis._prev = prevAnalysis;
+  analysis._gaByChannel = agg.ga.byChannel || {};
+  analysis._kakao = _kakaoReturnAnalysis(ss, monthStart, monthEnd);
+  analysis._device = _deviceMobilePcAnalysis(ss, monthStart, monthEnd);
+  analysis._metaCampaigns = _metaCampaignAnalysis(ss, monthStart, monthEnd, history);
+  analysis._pay = _aggregatePayments(ss, monthStart, monthEnd);
+  analysis._payCumul = _aggregatePayments(ss, '2026-06-04', monthEnd);
+
+  // 주간 양식 그대로, 기간 라벨만 다르게 (isWeekly=true 처리 — _buildReportHtml에서 weekly로 인식)
+  const built = _buildReportHtml('weekly', monthStart, monthEnd, analysis, history);
+  const path = 'monthly/' + monthStart + '_' + monthEnd + '.html';
+  const url = _publishToGithub(path, built.html, '[bot] monthly report ' + monthStart + '~' + monthEnd + ' v1.2.4');
+  _logReportToSheet('monthly', monthStart, monthEnd, url, built.title.replace('주간 분석', '월간 분석'));
+  return {monthStart, monthEnd, url, title: built.title};
 }
 
 function _yesterday(dateStr) {
