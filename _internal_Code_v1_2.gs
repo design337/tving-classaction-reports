@@ -1442,6 +1442,11 @@ function _writeZone1Fixed(ss, sheet, range) {
   // 가중 평균 참여율 — GA4_Raw 전체 세션 가중 (v1.1.12)
   const engage = (agg.gaSess && agg.gaSess.totalSessions > 0)
     ? agg.gaSess.totalEngaged / agg.gaSess.totalSessions : 0;
+  // v1.2.2 — 실결제자 / 매출 / ROAS (집계는 함수, 매칭 키 없음)
+  const pay = _aggregatePayments(ss, range.minDate, range.maxDate);
+  const payCount = pay.completed || 0;
+  const revenue = pay.totalAmount || 0;
+  const roas = tot > 0 ? revenue / tot : 0;
   const writes = [
     {col: C.range,  val: rangeText},
     {col: C.cost,   val: tot},
@@ -1451,8 +1456,10 @@ function _writeZone1Fixed(ss, sheet, range) {
     {col: C.cpc,    val: cpc},
     {col: C.engage, val: engage},
     {col: C.home,   val: home},
-    {col: C.info,   val: info}
-    // pay / rev / roas — manual
+    {col: C.info,   val: info},
+    {col: C.pay,    val: payCount},
+    {col: C.rev,    val: revenue},
+    {col: C.roas,   val: roas}
   ];
   writes.forEach(w => sheet.getRange(r, w.col).setValue(w.val));
   return {
@@ -2453,6 +2460,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   const metaAds = analysis._metaCampaigns || {ads:[], setGroups:{}, inactive:[], total:{cost:0,imp:0,clk:0}};
   const kakaoData = analysis._kakao || {sources:[], total:0, reVisitRate:0};
   const deviceData = analysis._device || {mo:{users:0}, pc:{users:0}, referral:{users:0}};
+  // v1.2.2 — 결제 데이터 (표지 ROAS + zone1 누적)
+  const payDay = analysis._pay || {completed:0, totalAmount:0};
+  const payCumulData = analysis._payCumul || {completed:0, totalAmount:0};
   const prevDevice = (prev && prev._device) || {mo:{users:0}, pc:{users:0}, referral:{users:0}};
 
   const cssBlock = _v12CssBlock();
@@ -2475,6 +2485,7 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<div class="kpi-cover"><div class="label">총 클릭</div><div class="value">' + _fmt0(reportClicks) + '</div></div>'
     + '<div class="kpi-cover"><div class="label">신청자<span style="font-size:6pt;opacity:0.7;"> (직접 제외)</span></div><div class="value">' + _fmt0(totalAd + totalNonAd) + '</div></div>'
     + '<div class="kpi-cover"><div class="label">CPA</div><div class="value">₩' + _fmt0((totalAd + totalNonAd) > 0 ? adCost / (totalAd + totalNonAd) : 0) + ' <span class="unit">/신청</span></div></div>'
+    + '<div class="kpi-cover"><div class="label">ROAS<span style="font-size:6pt;opacity:0.7;"> (' + (isWeekly?'기간':'당일') + ' 매출/광고비)</span></div><div class="value">' + (adCost > 0 && payDay.totalAmount > 0 ? (payDay.totalAmount / adCost * 100).toFixed(1) + '%' : '—') + '</div></div>'
     + '</div>'
     + '<div class="meta">발행 · ' + new Date().toLocaleDateString('ko-KR') + ' · ' + CONFIG.AUTHOR + ' · ' + CONFIG.CLIENT + '</div>'
     + '</section>';
@@ -2487,7 +2498,6 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     '<li><strong>네이버 SA 키워드 효율</strong> — TOP + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>GA4 신청 채널 분석</strong> — 광고 vs 비광고 (직접 제외) + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>메타 광고 캠페인 성과</strong> — 광고세트별 광고비/CTR/CPC + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
-    '<li><strong>결제 전환 분석</strong> — 신청 → 결제 전환율 + 결제 방법 + ROAS · 누적 매출</li>',
     '<li><strong>모바일 vs PC</strong> — 디바이스별 + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>마케팅 히스토리</strong> — 기간 내 캠페인 변경</li>',
     '<li><strong>인사이트 & 액션 플랜</strong> — P1/P2/P3</li>'
@@ -2671,55 +2681,17 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   }
   html += '</div></section>';
 
-  // SECTION 07 — 결제 전환 분석 (v1.2.2 신규)
-  const payData = analysis._pay || {count:0, completed:0, totalAmount:0, byMethod:{}, byDate:{}, avgAmount:0};
-  const payCumul = analysis._payCumul || {completed:0, totalAmount:0};
-  const prevPay = (prev && prev._pay) || {completed:0, totalAmount:0};
-  if (payData.completed > 0 || prevPay.completed > 0 || payCumul.completed > 0) {
-    const dayConv = (totalAd + totalNonAd) > 0 ? (payData.completed / (totalAd + totalNonAd) * 100) : 0;
-    const prevDayConv = (prevTotalAd + prevTotalNonAd) > 0 ? (prevPay.completed / (prevTotalAd + prevTotalNonAd) * 100) : 0;
-    const adRoas = adCost > 0 ? (payData.totalAmount / adCost * 100) : 0;
-    const cumulCpa = payCumul.completed > 0 ? Math.round(adCost / payCumul.completed) : 0;
+  // v1.2.2 — 결제 데이터 (Section 삭제, 표지/zone1에만 노출)
+  const payData = analysis._pay || {completed:0, totalAmount:0};
 
-    html += '<section class="section"><div class="section-header">'
-      + '<div class="sec-num">SECTION 07</div><div class="sec-title">결제 전환 분석</div>'
-      + '<div class="sec-subtitle">신청 → 결제 전환율 + 결제 방법 분포 + 누적 매출 (PII 제외, 집계만)</div>'
-      + '</div><div class="section-body">'
-      + '<div class="kpi-grid">'
-      + '<div class="kpi-card"><div class="label">' + (isWeekly?'기간':'당일') + ' 결제 완료</div><div class="value">' + _fmt0(payData.completed) + '</div><div class="delta ' + _dodCls(payData.completed, prevPay.completed) + '">' + _dod(payData.completed, prevPay.completed) + '</div><div class="delta-note">' + (isWeekly?'전주':'전일') + ' ' + _fmt0(prevPay.completed) + '명</div></div>'
-      + '<div class="kpi-card"><div class="label">' + (isWeekly?'기간':'당일') + ' 매출</div><div class="value">₩' + _fmt0(payData.totalAmount) + '</div><div class="delta-note">평균 ₩' + _fmt0(payData.avgAmount) + ' / 건</div></div>'
-      + '<div class="kpi-card"><div class="label">신청 → 결제 전환율</div><div class="value">' + dayConv.toFixed(1) + '%</div><div class="delta ' + _dodCls(dayConv, prevDayConv) + '">' + _dod(dayConv, prevDayConv) + '</div><div class="delta-note">신청 ' + _fmt0(totalAd + totalNonAd) + ' → 결제 ' + _fmt0(payData.completed) + '</div></div>'
-      + '<div class="kpi-card"><div class="label">누적 결제 (6/4~)</div><div class="value">' + _fmt0(payCumul.completed) + '</div><div class="delta-note">누적 매출 ₩' + _fmt0(payCumul.totalAmount) + '</div></div>'
-      + '</div>';
-
-    // 결제 방법 분포
-    if (Object.keys(payData.byMethod).length > 0) {
-      html += '<h3 style="font-size:10pt;color:#5B4894;margin-top:14px;">결제 방법 분포</h3>'
-        + '<table><tr><th>결제 방법</th><th class="num">건수</th><th class="num">비중</th></tr>';
-      const methodSorted = Object.entries(payData.byMethod).sort((a,b) => b[1] - a[1]);
-      methodSorted.forEach(([m, c]) => {
-        const pct = payData.completed > 0 ? (c / payData.completed * 100).toFixed(1) : '0';
-        html += '<tr><td>' + m + '</td><td class="num">' + c + '</td><td class="num">' + pct + '%</td></tr>';
-      });
-      html += '</table>';
-    }
-
-    html += '<div class="callout"><span class="title">💰 ROAS · CPA 메모</span>'
-      + '광고비 ₩' + _fmt0(adCost) + ' / ' + (isWeekly?'기간':'당일') + ' 매출 ₩' + _fmt0(payData.totalAmount) + ' → ' + (isWeekly?'기간':'당일') + ' ROAS ' + adRoas.toFixed(1) + '%. '
-      + '누적 광고비 대비 결제자 CPA (전체 기간) ₩' + _fmt0(cumulCpa) + '. '
-      + '<b>※ 본 섹션은 결제 데이터 집계만 노출 — 개별 신청자 식별 정보는 일절 표시하지 않음</b>'
-      + '</div>'
-      + '</div></section>';
-  }
-
-  // SECTION 08 — 모바일 vs PC
+  // SECTION 07 — 모바일 vs PC
   const moTotal = deviceData.mo.users;
   const pcTotal = deviceData.pc.users;
   const naverTotal = moTotal + pcTotal;
   const moCost = naverTotal > 0 ? (naver.cost||0) * moTotal / naverTotal : 0;
   const pcCost = naverTotal > 0 ? (naver.cost||0) * pcTotal / naverTotal : 0;
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 08</div><div class="sec-title">모바일 vs PC</div>'
+    + '<div class="sec-num">SECTION 07</div><div class="sec-title">모바일 vs PC</div>'
     + '<div class="sec-subtitle">디바이스별 신청 효율 + ' + (isWeekly?'WoW':'DoD') + '</div>'
     + '</div><div class="section-body"><table>'
     + '<tr><th>채널</th><th>디바이스</th><th class="num">' + _shortDate(endDate) + ' 신청</th><th class="num">' + (isWeekly?'전주':'전일') + '</th><th class="num">' + (isWeekly?'WoW':'DoD') + '</th><th class="num">광고비</th><th class="num">CPA</th><th class="num">비중</th></tr>'
@@ -2729,9 +2701,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<tr><td colspan="2">네이버 referral (모바일 검색)</td><td class="num">' + _fmt0(deviceData.referral.users) + '</td><td class="num">' + _fmt0(prevDevice.referral.users) + '</td><td class="num ' + _dodCls(deviceData.referral.users, prevDevice.referral.users) + '">' + _dod(deviceData.referral.users, prevDevice.referral.users) + '</td><td class="num">₩0</td><td class="num">—</td><td class="num">—</td></tr>'
     + '</table></div></section>';
 
-  // SECTION 09 — 마케팅 히스토리
+  // SECTION 08 — 마케팅 히스토리
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 09</div><div class="sec-title">마케팅 히스토리</div>'
+    + '<div class="sec-num">SECTION 08</div><div class="sec-title">마케팅 히스토리</div>'
     + '<div class="sec-subtitle">기간 내 캠페인 변경 사항 (마케팅 히스토리 시트)</div>'
     + '</div><div class="section-body">';
   if (history && history.length > 0) {
@@ -2752,9 +2724,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   }
   html += '</div></section>';
 
-  // SECTION 10 — 인사이트 & 액션
+  // SECTION 09 — 인사이트 & 액션
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 10</div><div class="sec-title">인사이트 & 액션 플랜</div>'
+    + '<div class="sec-num">SECTION 09</div><div class="sec-title">인사이트 & 액션 플랜</div>'
     + '<div class="sec-subtitle">관찰 · 원인 · 액션 · 우선순위</div>'
     + '</div><div class="section-body">';
   html += '<h3>🔍 인사이트</h3>';
@@ -2874,8 +2846,8 @@ body {
 }
 .cover .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
 }
 .cover .kpi-cover {
   background: rgba(255,255,255,0.06);
