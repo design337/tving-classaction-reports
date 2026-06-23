@@ -2486,7 +2486,7 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<div class="kpi-cover"><div class="label">실 결제자<span style="font-size:6pt;opacity:0.7;"> (' + (isWeekly?'기간':'당일') + ')</span></div><div class="value">' + (payDay.completed > 0 ? _fmt0(payDay.completed) : '—') + '</div></div>'
     + '<div class="kpi-cover"><div class="label">결제 CPA<span style="font-size:6pt;opacity:0.7;"> (광고비/결제)</span></div><div class="value">' + (payDay.completed > 0 ? '₩' + _fmt0(adCost / payDay.completed) : '—') + '</div></div>'
     + '<div class="kpi-cover"><div class="label">ROAS<span style="font-size:6pt;opacity:0.7;"> (매출/광고비)</span></div><div class="value">' + (adCost > 0 && payDay.totalAmount > 0 ? (payDay.totalAmount / adCost * 100).toFixed(1) + '%' : '—') + '</div></div>'
-    + '<div class="kpi-cover"><div class="label">신청→결제 전환<span style="font-size:6pt;opacity:0.7;"> (결제/신청)</span></div><div class="value">' + ((totalAd + totalNonAd) > 0 && payDay.completed > 0 ? (payDay.completed / (totalAd + totalNonAd) * 100).toFixed(1) + '%' : '—') + '</div></div>'
+    + '<div class="kpi-cover"><div class="label">신청→결제 이탈률<span style="font-size:6pt;opacity:0.7;"> (1 - 결제/신청)</span></div><div class="value">' + ((totalAd + totalNonAd) > 0 && payDay.completed > 0 ? (Math.max(0, 100 - payDay.completed / (totalAd + totalNonAd) * 100)).toFixed(1) + '%' : '—') + '</div></div>'
     + '</div>'
     + '<div class="meta">발행 · ' + new Date().toLocaleDateString('ko-KR') + ' · ' + CONFIG.AUTHOR + ' · ' + CONFIG.CLIENT + '</div>'
     + '</section>';
