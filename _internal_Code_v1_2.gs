@@ -606,9 +606,14 @@ function _aggregateByDate(ss, startDate, endDate) {
 // ============================================================================
 
 function _aggregatePayments(ss, startDate, endDate) {
-  // 결제 일시 포맷 예: "2026. 6. 19. 오전 11:23:45" → YYYY-MM-DD 추출
+  // 결제 일시 포맷 예: "2026. 6. 19. 오전 11:23:45" or Date 객체 → YYYY-MM-DD 추출
   function parsePayDate(s) {
     if (!s) return '';
+    // Date 객체 (구글 시트가 자동 변환한 경우)
+    if (s instanceof Date) {
+      const y = s.getFullYear(), mo = String(s.getMonth()+1).padStart(2,'0'), d = String(s.getDate()).padStart(2,'0');
+      return y + '-' + mo + '-' + d;
+    }
     const str = String(s).trim();
     // 패턴: YYYY. M. D. 또는 YYYY-MM-DD 또는 YYYY/MM/DD
     const m = str.match(/(\d{4})[.\-\/\s]+(\d{1,2})[.\-\/\s]+(\d{1,2})/);
