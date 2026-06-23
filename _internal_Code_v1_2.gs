@@ -642,8 +642,9 @@ function _aggregatePayments(ss, startDate, endDate) {
     const payDateStr = parsePayDate(r['결제 일시']);
     if (!payDateStr) continue;
     if (payDateStr < startDate || payDateStr > endDate) continue;
-    // 취소 일시가 있으면 cancelled, 없으면 completed
-    const cancelled = !!String(r['취소 일시'] || '').trim();
+    // 취소 일시가 실제 날짜면 cancelled. "-"·"" placeholder는 미취소 처리 (v1.2.4.2)
+    const cancelRaw = String(r['취소 일시'] || '').trim();
+    const cancelled = cancelRaw !== '' && cancelRaw !== '-' && cancelRaw !== '—' && cancelRaw !== 'null';
     const amt = parseAmt(r['결제 금액']);
     const method = String(r['결제 방법'] || '').trim() || '기타';
     out.count++;
