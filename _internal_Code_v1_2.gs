@@ -1401,7 +1401,7 @@ function _normalizeOverviewFormats(sheet) {
     {col: 9,  fmt: NUM},  // info 유입자
     {col: 10, fmt: NUM},  // 실 결제자
     {col: 11, fmt: WON},  // 매출금액
-    {col: 12, fmt: DEC}   // ROAS
+    {col: 12, fmt: PCT}   // ROAS — % 표시 (v1.2.4.3, 저장값 15.56 → 표시 "1556.00%")
   ];
   z1.forEach(w => sheet.getRange(r1, w.col).setNumberFormat(w.fmt));
 
