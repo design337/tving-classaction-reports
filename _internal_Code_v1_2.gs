@@ -78,6 +78,10 @@ const CONFIG = {
     'GA4_티빙 집단소송 신청하기': {
       dateCol: '날짜',
       dedupe: ['날짜', '이벤트 이름', '세션 소스/매체', '세션 캠페인']
+    },
+    '실 결제자': {
+      dateCol: '결제 일시',
+      dedupe: ['신청자', '결제 일시']
     }
   },
 
@@ -312,8 +316,15 @@ function _appendDataToSheets(ss, data) {
     // 캠페인 필터 — tving / 티빙 포함만 통과
     // GA4_티빙 집단소송 신청하기 = 신청 의도자 전수 (모든 채널 — 카카오/오가닉/리퍼럴/직접/AI/광고)
     // GA4_Raw = 광고 캠페인 트래픽 추적 (티빙 캠페인 매칭만, 필터 유지)
-    const skipFilterForGA = sheetName === 'GA4_티빙 집단소송 신청하기';
-    const filtered = skipFilterForGA ? incoming.slice() : incoming.filter(r => _isProjectCampaign(r));
+    // 실 결제자 = 결제 완료자 전수 (소송명 = '티빙 집단소송' 만 통과)
+    const skipCampFilter = sheetName === 'GA4_티빙 집단소송 신청하기';
+    const isPay = sheetName === '실 결제자';
+    let filtered;
+    if (isPay) {
+      filtered = incoming.filter(r => /티빙/.test(String(r['소송명'] || '')));
+    } else {
+      filtered = skipCampFilter ? incoming.slice() : incoming.filter(r => _isProjectCampaign(r));
+    }
 
     const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const existing = sheet.getLastRow() > 1
@@ -578,6 +589,59 @@ function _aggregateByDate(ss, startDate, endDate) {
   });
 
   return {meta, naver, google, ga, gaSess, naverKw, googleCh};
+}
+
+// ============================================================================
+// v1.2.2 — 실 결제자 집계 (PII 시트만, 보고서엔 집계만)
+// ============================================================================
+
+function _aggregatePayments(ss, startDate, endDate) {
+  // 결제 일시 포맷 예: "2026. 6. 19. 오전 11:23:45" → YYYY-MM-DD 추출
+  function parsePayDate(s) {
+    if (!s) return '';
+    const str = String(s).trim();
+    // 패턴: YYYY. M. D. 또는 YYYY-MM-DD 또는 YYYY/MM/DD
+    const m = str.match(/(\d{4})[.\-\/\s]+(\d{1,2})[.\-\/\s]+(\d{1,2})/);
+    if (!m) return '';
+    const y = m[1], mo = m[2].padStart(2, '0'), d = m[3].padStart(2, '0');
+    return y + '-' + mo + '-' + d;
+  }
+  function parseAmt(v) {
+    if (!v) return 0;
+    const s = String(v).replace(/[,원\s]/g, '');
+    const n = parseFloat(s);
+    return isNaN(n) ? 0 : n;
+  }
+  const out = {
+    count: 0,
+    totalAmount: 0,
+    byMethod: {},   // 결제 방법별 (카드/카카오페이)
+    byDate: {},     // 일자별
+    cancelled: 0,
+    completed: 0
+  };
+  const sheet = ss.getSheetByName('실 결제자');
+  if (!sheet) return out;
+  const rows = _readSheetRows(ss, '실 결제자');
+  for (const r of rows) {
+    const payDateStr = parsePayDate(r['결제 일시']);
+    if (!payDateStr) continue;
+    if (payDateStr < startDate || payDateStr > endDate) continue;
+    // 취소 일시가 있으면 cancelled, 없으면 completed
+    const cancelled = !!String(r['취소 일시'] || '').trim();
+    const amt = parseAmt(r['결제 금액']);
+    const method = String(r['결제 방법'] || '').trim() || '기타';
+    out.count++;
+    if (cancelled) out.cancelled++;
+    else {
+      out.completed++;
+      out.totalAmount += amt;
+      out.byMethod[method] = (out.byMethod[method] || 0) + 1;
+      out.byDate[payDateStr] = (out.byDate[payDateStr] || 0) + 1;
+    }
+  }
+  out.avgAmount = out.completed > 0 ? Math.round(out.totalAmount / out.completed) : 0;
+  return out;
 }
 
 // ============================================================================
@@ -2423,6 +2487,7 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     '<li><strong>네이버 SA 키워드 효율</strong> — TOP + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>GA4 신청 채널 분석</strong> — 광고 vs 비광고 (직접 제외) + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>메타 광고 캠페인 성과</strong> — 광고세트별 광고비/CTR/CPC + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
+    '<li><strong>결제 전환 분석</strong> — 신청 → 결제 전환율 + 결제 방법 + ROAS · 누적 매출</li>',
     '<li><strong>모바일 vs PC</strong> — 디바이스별 + ' + (isWeekly ? 'WoW' : 'DoD') + '</li>',
     '<li><strong>마케팅 히스토리</strong> — 기간 내 캠페인 변경</li>',
     '<li><strong>인사이트 & 액션 플랜</strong> — P1/P2/P3</li>'
@@ -2606,14 +2671,55 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   }
   html += '</div></section>';
 
-  // SECTION 07 — 모바일 vs PC
+  // SECTION 07 — 결제 전환 분석 (v1.2.2 신규)
+  const payData = analysis._pay || {count:0, completed:0, totalAmount:0, byMethod:{}, byDate:{}, avgAmount:0};
+  const payCumul = analysis._payCumul || {completed:0, totalAmount:0};
+  const prevPay = (prev && prev._pay) || {completed:0, totalAmount:0};
+  if (payData.completed > 0 || prevPay.completed > 0 || payCumul.completed > 0) {
+    const dayConv = (totalAd + totalNonAd) > 0 ? (payData.completed / (totalAd + totalNonAd) * 100) : 0;
+    const prevDayConv = (prevTotalAd + prevTotalNonAd) > 0 ? (prevPay.completed / (prevTotalAd + prevTotalNonAd) * 100) : 0;
+    const adRoas = adCost > 0 ? (payData.totalAmount / adCost * 100) : 0;
+    const cumulCpa = payCumul.completed > 0 ? Math.round(adCost / payCumul.completed) : 0;
+
+    html += '<section class="section"><div class="section-header">'
+      + '<div class="sec-num">SECTION 07</div><div class="sec-title">결제 전환 분석</div>'
+      + '<div class="sec-subtitle">신청 → 결제 전환율 + 결제 방법 분포 + 누적 매출 (PII 제외, 집계만)</div>'
+      + '</div><div class="section-body">'
+      + '<div class="kpi-grid">'
+      + '<div class="kpi-card"><div class="label">' + (isWeekly?'기간':'당일') + ' 결제 완료</div><div class="value">' + _fmt0(payData.completed) + '</div><div class="delta ' + _dodCls(payData.completed, prevPay.completed) + '">' + _dod(payData.completed, prevPay.completed) + '</div><div class="delta-note">' + (isWeekly?'전주':'전일') + ' ' + _fmt0(prevPay.completed) + '명</div></div>'
+      + '<div class="kpi-card"><div class="label">' + (isWeekly?'기간':'당일') + ' 매출</div><div class="value">₩' + _fmt0(payData.totalAmount) + '</div><div class="delta-note">평균 ₩' + _fmt0(payData.avgAmount) + ' / 건</div></div>'
+      + '<div class="kpi-card"><div class="label">신청 → 결제 전환율</div><div class="value">' + dayConv.toFixed(1) + '%</div><div class="delta ' + _dodCls(dayConv, prevDayConv) + '">' + _dod(dayConv, prevDayConv) + '</div><div class="delta-note">신청 ' + _fmt0(totalAd + totalNonAd) + ' → 결제 ' + _fmt0(payData.completed) + '</div></div>'
+      + '<div class="kpi-card"><div class="label">누적 결제 (6/4~)</div><div class="value">' + _fmt0(payCumul.completed) + '</div><div class="delta-note">누적 매출 ₩' + _fmt0(payCumul.totalAmount) + '</div></div>'
+      + '</div>';
+
+    // 결제 방법 분포
+    if (Object.keys(payData.byMethod).length > 0) {
+      html += '<h3 style="font-size:10pt;color:#5B4894;margin-top:14px;">결제 방법 분포</h3>'
+        + '<table><tr><th>결제 방법</th><th class="num">건수</th><th class="num">비중</th></tr>';
+      const methodSorted = Object.entries(payData.byMethod).sort((a,b) => b[1] - a[1]);
+      methodSorted.forEach(([m, c]) => {
+        const pct = payData.completed > 0 ? (c / payData.completed * 100).toFixed(1) : '0';
+        html += '<tr><td>' + m + '</td><td class="num">' + c + '</td><td class="num">' + pct + '%</td></tr>';
+      });
+      html += '</table>';
+    }
+
+    html += '<div class="callout"><span class="title">💰 ROAS · CPA 메모</span>'
+      + '광고비 ₩' + _fmt0(adCost) + ' / ' + (isWeekly?'기간':'당일') + ' 매출 ₩' + _fmt0(payData.totalAmount) + ' → ' + (isWeekly?'기간':'당일') + ' ROAS ' + adRoas.toFixed(1) + '%. '
+      + '누적 광고비 대비 결제자 CPA (전체 기간) ₩' + _fmt0(cumulCpa) + '. '
+      + '<b>※ 본 섹션은 결제 데이터 집계만 노출 — 개별 신청자 식별 정보는 일절 표시하지 않음</b>'
+      + '</div>'
+      + '</div></section>';
+  }
+
+  // SECTION 08 — 모바일 vs PC
   const moTotal = deviceData.mo.users;
   const pcTotal = deviceData.pc.users;
   const naverTotal = moTotal + pcTotal;
   const moCost = naverTotal > 0 ? (naver.cost||0) * moTotal / naverTotal : 0;
   const pcCost = naverTotal > 0 ? (naver.cost||0) * pcTotal / naverTotal : 0;
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 07</div><div class="sec-title">모바일 vs PC</div>'
+    + '<div class="sec-num">SECTION 08</div><div class="sec-title">모바일 vs PC</div>'
     + '<div class="sec-subtitle">디바이스별 신청 효율 + ' + (isWeekly?'WoW':'DoD') + '</div>'
     + '</div><div class="section-body"><table>'
     + '<tr><th>채널</th><th>디바이스</th><th class="num">' + _shortDate(endDate) + ' 신청</th><th class="num">' + (isWeekly?'전주':'전일') + '</th><th class="num">' + (isWeekly?'WoW':'DoD') + '</th><th class="num">광고비</th><th class="num">CPA</th><th class="num">비중</th></tr>'
@@ -2623,9 +2729,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
     + '<tr><td colspan="2">네이버 referral (모바일 검색)</td><td class="num">' + _fmt0(deviceData.referral.users) + '</td><td class="num">' + _fmt0(prevDevice.referral.users) + '</td><td class="num ' + _dodCls(deviceData.referral.users, prevDevice.referral.users) + '">' + _dod(deviceData.referral.users, prevDevice.referral.users) + '</td><td class="num">₩0</td><td class="num">—</td><td class="num">—</td></tr>'
     + '</table></div></section>';
 
-  // SECTION 08 — 마케팅 히스토리
+  // SECTION 09 — 마케팅 히스토리
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 08</div><div class="sec-title">마케팅 히스토리</div>'
+    + '<div class="sec-num">SECTION 09</div><div class="sec-title">마케팅 히스토리</div>'
     + '<div class="sec-subtitle">기간 내 캠페인 변경 사항 (마케팅 히스토리 시트)</div>'
     + '</div><div class="section-body">';
   if (history && history.length > 0) {
@@ -2646,9 +2752,9 @@ function _buildReportHtml(reportType, startDate, endDate, analysis, history) {
   }
   html += '</div></section>';
 
-  // SECTION 09 — 인사이트 & 액션
+  // SECTION 10 — 인사이트 & 액션
   html += '<section class="section"><div class="section-header">'
-    + '<div class="sec-num">SECTION 09</div><div class="sec-title">인사이트 & 액션 플랜</div>'
+    + '<div class="sec-num">SECTION 10</div><div class="sec-title">인사이트 & 액션 플랜</div>'
     + '<div class="sec-subtitle">관찰 · 원인 · 액션 · 우선순위</div>'
     + '</div><div class="section-body">';
   html += '<h3>🔍 인사이트</h3>';
@@ -2990,6 +3096,10 @@ function _publishDailyReport(ss, date, history) {
   analysis._kakao = _kakaoReturnAnalysis(ss, date, date);
   analysis._device = _deviceMobilePcAnalysis(ss, date, date);
   analysis._metaCampaigns = _metaCampaignAnalysis(ss, date, date, history);
+  // v1.2.2 — 결제 데이터 (당일 + 누적 6/4부터)
+  analysis._pay = _aggregatePayments(ss, date, date);
+  analysis._payCumul = _aggregatePayments(ss, '2026-06-04', date);
+  prevAnalysis._pay = _aggregatePayments(ss, _yesterday(date), _yesterday(date));
 
   const built = _buildReportHtml('daily', date, date, analysis, history);
   const path = 'daily/' + date + '.html';
@@ -3017,6 +3127,10 @@ function _publishWeeklyReport(ss, weekStart, weekEnd, history) {
   analysis._kakao = _kakaoReturnAnalysis(ss, weekStart, weekEnd);
   analysis._device = _deviceMobilePcAnalysis(ss, weekStart, weekEnd);
   analysis._metaCampaigns = _metaCampaignAnalysis(ss, weekStart, weekEnd, history);
+  // v1.2.2 — 결제 (기간 + 누적)
+  analysis._pay = _aggregatePayments(ss, weekStart, weekEnd);
+  analysis._payCumul = _aggregatePayments(ss, '2026-06-04', weekEnd);
+  prevAnalysis._pay = _aggregatePayments(ss, prevStart, prevEnd);
 
   const built = _buildReportHtml('weekly', weekStart, weekEnd, analysis, history);
   const path = 'weekly/' + weekStart + '_' + weekEnd + '.html';
