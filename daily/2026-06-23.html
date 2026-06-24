@@ -1,0 +1,257 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex, nofollow"><title>티빙집단소송 광고 성과 분석 보고서 (6/23)</title><style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans KR', 'Noto Sans CJK KR', -apple-system, sans-serif;
+  font-size: 9pt;
+  line-height: 1.55;
+  color: #1E293B;
+  background: #FFFFFF;
+}
+.page-wrap { max-width: 900px; margin: 0 auto; padding: 24px 18px; }
+@page { size: A4; margin: 14mm 12mm 16mm 12mm; }
+@page :first { margin: 0; }
+
+/* ---- Cover ---- */
+.cover {
+  page-break-after: always;
+  break-after: page;
+  background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  color: #FFFFFF;
+  padding: 48px 36px;
+  border-radius: 8px;
+  margin-bottom: 28px;
+}
+.cover .wf-tag,
+.cover .mode-badge {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 12px;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.cover .wf-tag { background: rgba(123,104,174,0.20); color: #D6CEF0; margin-bottom: 6px; }
+.cover .mode-badge { background: rgba(59,130,246,0.20); color: #BFD7FF; margin-left: 6px; margin-bottom: 6px; }
+.cover h1 {
+  margin: 6px 0 4px;
+  font-size: 28pt;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  color: #FFFFFF;
+}
+.cover .subtitle { font-size: 12pt; font-weight: 300; color: #CBD5E1; margin-bottom: 14px; }
+.cover .divider {
+  width: 48px;
+  height: 2px;
+  background: #7B68AE;
+  margin: 14px 0 22px;
+}
+.cover .kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 20px 0 18px;
+}
+.cover .kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.cover .kpi-cover {
+  background: rgba(255,255,255,0.06);
+  border-left: 3px solid #7B68AE;
+  padding: 10px 12px;
+  border-radius: 0 4px 4px 0;
+}
+.cover .kpi-cover .label { font-size: 6.5pt; color: #94A3B8; font-weight: 500; letter-spacing: 0.4px; }
+.cover .kpi-cover .value { font-size: 15pt; font-weight: 700; color: #FFFFFF; margin-top: 2px; }
+.cover .kpi-cover .unit  { font-size: 7.5pt; font-weight: 400; color: #CBD5E1; }
+.cover .meta { font-size: 7.5pt; color: #94A3B8; margin-top: 14px; }
+
+/* ---- TOC ---- */
+.toc {
+  page-break-after: always;
+  break-after: page;
+  padding: 12px 4px 24px;
+}
+.toc h2 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: #1E293B;
+  border-bottom: 2px solid #7B68AE;
+  padding-bottom: 6px;
+  margin-bottom: 14px;
+}
+.toc ol { margin: 0; padding-left: 20px; }
+.toc li { margin: 4px 0; font-size: 9.5pt; color: #5A6478; }
+.toc li strong { color: #1E293B; }
+
+/* ---- Section header (dark box) ---- */
+.section {
+  page-break-inside: avoid;
+  break-inside: avoid;
+  margin: 22px 0 12px;
+}
+.section-header {
+  background: #1E293B;
+  padding: 10px 14px;
+  border-radius: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.section-header .sec-num {
+  color: #7B68AE;
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.section-header .sec-title {
+  color: #FFFFFF;
+  font-size: 11pt;
+  font-weight: 700;
+}
+.section-header .sec-subtitle {
+  color: #CBD5E1;
+  font-size: 8pt;
+  font-weight: 400;
+}
+.section-body { padding: 12px 4px 6px; }
+
+/* ---- KPI cards (in body) ---- */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+.kpi-card {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-left: 3px solid #7B68AE;
+  padding: 10px 12px;
+  border-radius: 4px;
+}
+.kpi-card .label { font-size: 7pt; color: #5A6478; font-weight: 500; letter-spacing: 0.4px; }
+.kpi-card .value { font-size: 14pt; font-weight: 700; color: #1E293B; margin-top: 2px; }
+.kpi-card .unit  { font-size: 7.5pt; font-weight: 400; color: #94A3B8; margin-top: 1px; }
+.kpi-card .delta { display: inline-block; margin-left: 4px; font-size: 7.5pt; font-weight: 700; }
+
+/* ---- Tables ---- */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 8pt;
+  margin: 6px 0 12px;
+  page-break-inside: avoid;
+}
+thead th {
+  background: #334155;
+  color: #FFFFFF;
+  font-size: 7.5pt;
+  font-weight: 600;
+  padding: 6px 8px;
+  text-align: left;
+  letter-spacing: 0.2px;
+}
+tbody td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #E2E8F0;
+  color: #1E293B;
+  vertical-align: middle;
+}
+tbody tr:nth-child(odd)  td { background: #FFFFFF; }
+tbody tr:nth-child(even) td { background: #F8FAFC; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr.total td {
+  background: #1E293B !important;
+  color: #FFFFFF;
+  font-weight: 700;
+}
+
+/* ---- Delta ---- */
+.up   { color: #C0392B; font-weight: 700; }
+.down { color: #1E3A8A; font-weight: 700; }
+.up-bad   { color: #C0392B; font-weight: 700; }
+.flat { color: #94A3B8; }
+.delta-note { font-size: 7pt; color: #94A3B8; font-style: italic; margin-left: 4px; }
+
+/* ---- Boxes ---- */
+.callout {
+  background: #E8E4F2;
+  border-left: 3px solid #7B68AE;
+  padding: 10px 14px;
+  border-radius: 0 4px 4px 0;
+  margin: 8px 0 12px;
+  font-size: 8.5pt;
+  line-height: 1.7;
+}
+.callout strong { color: #5B4894; }
+.callout .title { font-size: 9pt; font-weight: 700; color: #5B4894; display: block; margin-bottom: 4px; }
+.callout-red {
+  background: #FDF0EE;
+  border-left: 3px solid #C0392B;
+  padding: 9px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 8.5pt;
+}
+.callout-red .title { color: #C0392B; font-weight: 700; }
+.callout-green {
+  background: #EAF4EE;
+  border-left: 3px solid #1A6644;
+  padding: 9px 12px;
+  margin: 8px 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 8.5pt;
+}
+.callout-green .title { color: #1A6644; font-weight: 700; }
+
+/* ---- Tags / priorities ---- */
+.tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 7pt;
+  font-weight: 700;
+  margin-right: 4px;
+  letter-spacing: 0.3px;
+}
+.tag.p1 { background: #FDF0EE; color: #C0392B; }
+.tag.p2 { background: #FEF3C7; color: #B45309; }
+.tag.p3 { background: #E8E4F2; color: #5B4894; }
+.tag.meta  { background: #E8E4F2; color: #5B4894; }
+.tag.naver { background: #EAF4EE; color: #1A6644; }
+.tag.ga    { background: #DBEAFE; color: #1E40AF; }
+
+/* ---- Misc ---- */
+p { margin: 4px 0; }
+.note-empty { color: #94A3B8; font-size: 8pt; font-style: italic; }
+.section-narrative { font-size: 8.5pt; color: #5A6478; margin: 6px 0 10px; line-height: 1.7; }
+.divider-soft { border: 0; border-top: 1px solid #E2E8F0; margin: 16px 0; }
+
+/* ---- Footer ---- */
+.footer {
+  border-top: 1px solid #E2E8F0;
+  text-align: center;
+  margin-top: 28px;
+  padding: 14px 0 6px;
+  color: #94A3B8;
+  font-size: 6.5pt;
+  letter-spacing: 0.3px;
+}
+.footer .pgnum { margin-left: 6px; }
+
+@media print {
+  body { background: #FFFFFF; }
+  .page-wrap { padding: 0; max-width: 100%; }
+  .cover, .section-header, thead th, tr.total td, .callout, .callout-red, .callout-green, .kpi-card {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+</style>
+</head><body><div class="page-wrap"><section class="cover"><span class="wf-tag">TVING CLASS ACTION · DAILY REPORT</span><span class="mode-badge">2026-06-23</span><h1>티빙 개인정보 유출 집단소송</h1><div class="subtitle">광고 성과 일간 분석 보고서 (2026-06-23)</div><div class="kpi-grid"><div class="kpi-cover"><div class="label">총 광고비</div><div class="value">₩270,389 <span class="unit">KRW</span></div></div><div class="kpi-cover"><div class="label">총 클릭</div><div class="value">4,335</div></div><div class="kpi-cover"><div class="label">실 결제자<span style="font-size:6pt;opacity:0.7;"> (당일)</span></div><div class="value">578</div></div><div class="kpi-cover"><div class="label">결제 CPA<span style="font-size:6pt;opacity:0.7;"> (광고비/결제)</span></div><div class="value">₩468</div></div><div class="kpi-cover"><div class="label">ROAS<span style="font-size:6pt;opacity:0.7;"> (매출/광고비)</span></div><div class="value">2137.7%</div></div><div class="kpi-cover"><div class="label">신청→결제 이탈률<span style="font-size:6pt;opacity:0.7;"> (1 - 결제/신청)</span></div><div class="value">46.8%</div></div></div><div class="meta">발행 · 2026. 6. 24. · 에이아이컨실리움 · 법무법인 더 에이치 황해</div></section><section class="toc"><h2>목차 / Contents</h2><ol><li><strong>핵심 결론</strong> — 어제 대비 종합 평가</li><li><strong>일간 KPI 스냅샷</strong> — DoD ▲▼ 비교</li><li><strong>채널별 광고 성과</strong> — 메타 / 네이버SA + 전일 대비</li><li><strong>네이버 SA 키워드 효율</strong> — TOP + DoD</li><li><strong>GA4 신청 채널 분석</strong> — 광고 vs 비광고 (직접 제외) + DoD</li><li><strong>메타 광고 캠페인 성과</strong> — 광고세트별 광고비/CTR/CPC + DoD</li><li><strong>모바일 vs PC</strong> — 디바이스별 + DoD</li><li><strong>마케팅 히스토리</strong> — 기간 내 캠페인 변경</li><li><strong>인사이트 & 액션 플랜</strong> — P1/P2/P3</li></ol></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 01</div><div class="sec-title">핵심 결론</div><div class="sec-subtitle">2026-06-23 · 어제 대비 종합 평가</div></div><div class="section-body"><div class="callout"><span class="title">📌 핵심 메시지 — 실 결제자 중심</span>2026-06-23 <b>실 결제자 578명</b>(▼ -24.6%) · <b>결제 CPA ₩468</b> · <b>ROAS 2137.7%</b> · <b>신청→결제 전환 53.2%</b>. 광고비 ₩270,389(▲ +2.3%) · 클릭 4,335(▼ -15.4%) · 신청자 1,087명*. 핵심 전환 채널 <span class="tag naver">네이버SA</span> 670명, <span class="tag meta">메타</span> 385명.</div><div class="section-narrative"><b>신청 → 결제 깔때기</b>: 신청자 1,087명 → 결제 578명 (전환율 53.2%, 이탈률 46.8%). <b>매출 ₩5,780,000</b> · 결제 CPA ₩468 · ROAS 2137.7%. 내역(신청자): 광고 채널 1,055명(네이버SA 670 / 메타 385), 비광고 채널 32명(카카오/오가닉/리퍼럴/AI/기타).<br/><span style="font-size:7pt;color:#94A3B8;">* 신청자는 GA 직접(direct) 채널 1,180명 제외. 결제는 실결제자 시트 기준 (당일 결제 완료).</span></div></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 02</div><div class="sec-title">일간 KPI 스냅샷</div><div class="sec-subtitle">2026-06-23 vs 전일 DoD</div></div><div class="section-body"><div class="kpi-grid"><div class="kpi-card"><div class="label">총 광고비</div><div class="value">₩270,389</div><div class="delta up">▲ 2.3% (+5,969)</div><div class="delta-note">₩264,420</div></div><div class="kpi-card"><div class="label">총 노출</div><div class="value">42,820</div><div class="delta down">▼ 13.4% (-6,652)</div><div class="delta-note">49,472</div></div><div class="kpi-card"><div class="label">총 클릭</div><div class="value">4,335</div><div class="delta down">▼ 15.4% (-791)</div><div class="delta-note">5,126</div></div><div class="kpi-card"><div class="label">평균 CTR</div><div class="value">10.12%</div><div class="delta down">▼ 0.24pt</div><div class="delta-note">전일 10.36%</div></div><div class="kpi-card"><div class="label">평균 CPC</div><div class="value">₩62</div><div class="delta down">▲ 20.9% (+11)</div><div class="delta-note">₩52</div></div><div class="kpi-card"><div class="label">신청자*</div><div class="value">1,087</div><div class="delta up">▲ 2.2% (+23)</div><div class="delta-note">1,064 (직접 제외)</div></div><div class="kpi-card"><div class="label">CPA</div><div class="value">₩249</div><div class="delta down">▲ 0.1% (+0)</div><div class="delta-note">광고비 / 신청자</div></div><div class="kpi-card"><div class="label">광고 채널 신청</div><div class="value">1,055</div><div class="delta up">▲ 2% (+21)</div><div class="delta-note">1,034 (메타+네이버SA)</div></div></div><p style="font-size:7pt;color:#94A3B8;margin-top:10px;">* 신청자는 GA 직접(direct) 채널 1,180명 제외 — 일부는 카카오 알림톡 UTM 누락분 추정. CPA는 광고비 ÷ 전체 신청자(직접 제외).</p></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 03</div><div class="sec-title">채널별 광고 성과</div><div class="sec-subtitle">메타 / 네이버SA — DoD</div></div><div class="section-body"><table><tr><th rowspan="2">채널</th><th colspan="2" class="num">광고비</th><th colspan="2" class="num">클릭</th><th colspan="2" class="num">신청자</th><th colspan="2" class="num">CPA</th></tr><tr><th class="num">6/23</th><th class="num">DoD</th><th class="num">6/23</th><th class="num">DoD</th><th class="num">6/23</th><th class="num">DoD</th><th class="num">6/23</th><th class="num">DoD</th></tr><tr><td><span class="tag meta">메타</span> <span style="font-size:7pt;color:#94A3B8;">*ML 학습중</span></td><td class="num">₩129,251</td><td class="num down">▼ -7.6%</td><td class="num">2,594</td><td class="num down">▼ -29.1%</td><td class="num">385</td><td class="num down">▼ -23.0%</td><td class="num">₩336</td><td class="num down">▲ +20.0%</td></tr><tr><td><span class="tag naver">네이버SA</span></td><td class="num">₩141,138</td><td class="num up">▲ +13.3%</td><td class="num">1,741</td><td class="num up">▲ +18.8%</td><td class="num">670</td><td class="num up">▲ +25.5%</td><td class="num">₩211</td><td class="num up">▼ -9.7%</td></tr><tr class="total"><td>광고 합계</td><td class="num">₩270,389</td><td class="num up">▲ +2.3%</td><td class="num">4,335</td><td class="num down">▼ -15.4%</td><td class="num">1,055</td><td class="num up">▲ +2.0%</td><td class="num">₩256</td><td class="num down">▲ +0.2%</td></tr></table><div class="callout"><span class="title">🤖 메타 머신러닝 학습 컨텍스트</span>메타는 Advantage+ 머신러닝 알고리즘이 오디언스/시간대를 최적화 중. 일부 신규 소재(CI 계열)는 <b>수요 적은 시간대 노출을 자체 절감</b> 중이라 노출/클릭이 낮게 보일 수 있음. <b>학습 완료(약 7~14일 데이터 누적) 후 효율 자동 회복 예상</b> — 지금 끄지 말고 예산 유지가 정답.</div><div class="section-narrative">구글 광고는 현재 미집행 상태로 본 보고서에서 제외.</div></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 04</div><div class="sec-title">네이버 SA 키워드 효율</div><div class="sec-subtitle">TOP 10 — 실측 + DoD</div></div><div class="section-body"><table><tr><th>키워드</th><th class="num">노출</th><th class="num">클릭</th><th class="num">CTR</th><th class="num">CPC</th><th class="num">비용</th><th>DoD</th></tr><tr><td>티빙소송 ⭐</td><td class="num">2,594</td><td class="num">962</td><td class="num">37.09%</td><td class="num">₩77</td><td class="num">₩74,074</td><td><span class="tag p1">▲ +20%</span></td></tr><tr><td>티빙집단소송</td><td class="num">910</td><td class="num">271</td><td class="num">29.78%</td><td class="num">₩77</td><td class="num">₩20,867</td><td><span class="tag p2">유지</span></td></tr><tr><td>티빙개인정보유출소송 ⭐</td><td class="num">177</td><td class="num">70</td><td class="num">39.55%</td><td class="num">₩77</td><td class="num">₩5,390</td><td><span class="tag p1">▲ +71%</span></td></tr><tr><td>티빙집단소송참여 ⭐</td><td class="num">173</td><td class="num">64</td><td class="num">36.99%</td><td class="num">₩77</td><td class="num">₩4,928</td><td><span class="tag p1">▲ +68%</span></td></tr><tr><td>티빙손해배상</td><td class="num">82</td><td class="num">27</td><td class="num">32.93%</td><td class="num">₩165</td><td class="num">₩4,458</td><td><span class="tag p3">▼ -39%</span></td></tr><tr><td>티빙집단소송지향</td><td class="num">261</td><td class="num">55</td><td class="num">21.07%</td><td class="num">₩77</td><td class="num">₩4,235</td><td><span class="tag p1">▲ +25%</span></td></tr><tr><td>티빙개인정보보상</td><td class="num">151</td><td class="num">35</td><td class="num">23.18%</td><td class="num">₩118</td><td class="num">₩4,138</td><td><span class="tag p1">▲ 신규 등장</span></td></tr><tr><td>티빙단체소송</td><td class="num">219</td><td class="num">53</td><td class="num">24.20%</td><td class="num">₩77</td><td class="num">₩4,081</td><td><span class="tag p1">▲ +10%</span></td></tr><tr><td>티빙소송비용</td><td class="num">3</td><td class="num">2</td><td class="num">66.67%</td><td class="num">₩1,305</td><td class="num">₩2,609</td><td><span class="tag p1">▲ 신규 등장</span></td></tr><tr><td>티빙유출집단소송</td><td class="num">118</td><td class="num">33</td><td class="num">27.97%</td><td class="num">₩77</td><td class="num">₩2,541</td><td><span class="tag p1">▲ 신규 등장</span></td></tr></table><div class="callout"><span class="title">⭐ 효율 최상 키워드 (CTR 기준)</span><b>티빙개인정보유출소송</b> CTR 39.5% / CPC ₩77 · <b>티빙소송</b> CTR 37.1% / CPC ₩77 · <b>티빙집단소송참여</b> CTR 37.0% / CPC ₩77. 입찰가 단계적 상향 + 별도 그룹 분리 권장.</div></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 05</div><div class="sec-title">GA4 신청 채널 분석</div><div class="sec-subtitle">광고 vs 비광고 — 직접(direct) 제외 + DoD</div></div><div class="section-body"><p style="font-size:8pt;color:#64748B;">※ GA `(not set)`/`(direct)/(none)`/`(data not available)` 등 미식별 트래픽 1,180명 분석 대상 제외</p><table><tr><th>구분</th><th>채널</th><th class="num">6/23</th><th class="num">비중</th><th class="num">전일</th><th class="num">DoD</th><th class="num">광고비</th><th class="num">CPA</th></tr><tr><td rowspan="2"><b>광고</b></td><td><span class="tag naver">네이버SA</span></td><td class="num">670</td><td class="num">61.6%</td><td class="num">534</td><td class="num up">▲ +25.5%</td><td class="num">₩141,138</td><td class="num">₩211</td></tr><tr><td><span class="tag meta">메타</span></td><td class="num">385</td><td class="num">35.4%</td><td class="num">500</td><td class="num down">▼ -23.0%</td><td class="num">₩129,251</td><td class="num">₩336</td></tr><tr class="total"><td colspan="2">광고 소계</td><td class="num">1,055</td><td class="num">97.1%</td><td class="num">1,034</td><td class="num up">▲ +2.0%</td><td class="num">₩270,389</td><td class="num">₩256</td></tr><tr><td rowspan="5"><b>비광고<br/>(직접 제외)</b></td><td>네이버 referral</td><td class="num">3</td><td class="num">0.3%</td><td class="num">1</td><td class="num up">▲ +200.0%</td><td class="num">₩0</td><td class="num">₩0</td></tr><tr><td>오가닉 검색</td><td class="num">20</td><td class="num">1.8%</td><td class="num">16</td><td class="num up">▲ +25.0%</td><td class="num">₩0</td><td class="num">₩0</td></tr><tr><td><b>카카오</b></td><td class="num">6</td><td class="num">0.6%</td><td class="num">8</td><td class="num down">▼ -25.0%</td><td class="num">₩0</td><td class="num">₩0</td></tr><tr><td>기타 (home/social)</td><td class="num">3</td><td class="num">0.3%</td><td class="num">—</td><td class="num">—</td><td class="num">₩0</td><td class="num">₩0</td></tr><tr><td>AI 어시스턴트</td><td class="num">0</td><td class="num">0.0%</td><td class="num">0</td><td class="num ">—</td><td class="num">₩0</td><td class="num">₩0</td></tr><tr class="total"><td colspan="2">비광고 소계</td><td class="num">32</td><td class="num">2.9%</td><td class="num">30</td><td class="num up">▲ +6.7%</td><td class="num">₩0</td><td class="num">₩0</td></tr><tr class="total"><td colspan="2"><b>전체 (직접 제외)</b></td><td class="num"><b>1,087</b></td><td class="num">100%</td><td class="num">1,064</td><td class="num up">▲ +2.2%</td><td class="num">₩270,389</td><td class="num">₩249</td></tr></table><div class="callout"><span class="title">📌 측정 메모 — 직접(direct) 트래픽 일부는 카카오 알림톡일 가능성</span>GA `(direct)` 트래픽 <b>1,180명</b> 중 일부는 카카오 알림톡 발송 시 <b>UTM 누락된 분으로 추정</b>. 측정 정확도를 위해 향후 모든 알림톡 발송 시 UTM 필수 부착 필요.</div></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 06</div><div class="sec-title">메타 광고 캠페인 성과</div><div class="sec-subtitle">광고세트별 분리 + 마케팅 히스토리 매칭</div></div><div class="section-body"><p style="font-size:8pt;color:#64748B;">※ 캠페인 `티빙_집단소송_260604` 내 광고세트별 운영. 의도 라벨은 마케팅 히스토리 시트 기준.</p><h3 style="font-size:10pt;color:#5B4894;margin-top:8px;">광고세트: 260604_머신러닝(2060, 집단소송방문자제외)</h3><table><tr><th>광고 이름</th><th>소재 의도 (마케팅 히스토리)</th><th class="num">광고비</th><th class="num">노출</th><th class="num">클릭</th><th class="num">CTR</th><th class="num">CPC</th></tr><tr><td>tving_lowfee_260604</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩117,726</td><td class="num">34,406</td><td class="num">2,399</td><td class="num">6.97%</td><td class="num">₩49</td></tr><tr><td>tving_10000_260604</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩127</td><td class="num">23</td><td class="num">2</td><td class="num">8.70%</td><td class="num">₩64</td></tr><tr><td>tving_applogo_260604</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩9</td><td class="num">3</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr><tr><td>tving_ci_260604</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr><tr><td>tving_hacker_260604</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr></table><h3 style="font-size:10pt;color:#5B4894;margin-top:8px;">광고세트: 260618_머신러닝(2060, 집단소송방문자 포함)</h3><table><tr><th>광고 이름</th><th>소재 의도 (마케팅 히스토리)</th><th class="num">광고비</th><th class="num">노출</th><th class="num">클릭</th><th class="num">CTR</th><th class="num">CPC</th></tr><tr><td>tving_ci_lawsuit_260618</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩10,515</td><td class="num">2,170</td><td class="num">179</td><td class="num">8.25%</td><td class="num">₩59</td></tr><tr><td>tving_3boxes_benefit_260618</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr><tr><td>tving_grid_benefit_260618</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr><tr><td>tving_app_benefit_260618</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr><tr><td>tving_cidi_warning_260618</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr></table><h3 style="font-size:10pt;color:#5B4894;margin-top:8px;">광고세트: 260615_머신러닝(2060, 집단소송방문자제외)</h3><table><tr><th>광고 이름</th><th>소재 의도 (마케팅 히스토리)</th><th class="num">광고비</th><th class="num">노출</th><th class="num">클릭</th><th class="num">CTR</th><th class="num">CPC</th></tr><tr><td>tving_ci_slid_260615</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩874</td><td class="num">220</td><td class="num">14</td><td class="num">6.36%</td><td class="num">₩62</td></tr><tr><td>tving_ci_key_260615</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr><tr><td>tving_ci_victim_260615</td><td><span style="color:#94A3B8;font-size:8pt;">미매칭</span></td><td class="num">₩0</td><td class="num">0</td><td class="num">0</td><td class="num">0.00%</td><td class="num">₩0</td></tr></table><div class="callout"><span class="title">🤖 머신러닝 학습 단계 안내</span>광고세트 모수 <b>2560 → 2060 재학습</b> (6/15 전환). 일부 소재의 DoD 감소 또는 저예산 노출은 Advantage+ 알고리즘이 학습 단계에서 효율 낮은 시간대 노출을 자체 절감한 결과. 신규 소재는 7~14일 학습 데이터 누적이 필요.</div><div class="callout callout-red"><span class="title">⚠️ 미집행 광고 3종</span><br><b>tving_classaction_260604</b> — 티빙 개인정보유출 집단소송 마케팅 캠페인 런칭 (등록 2026-06-04)<br><b>tving_classaction_260605</b> — 네이버 추가 캠페인(classaction_260605) 셋팅 (등록 2026-06-05)<br><b>tving_claim_260609</b> — 네이버 블로그 콘텐츠 유입 채널 추가 (등록 2026-06-09)<br>광고 세트 활성화 누락 또는 예산 미배정 가능성. 메타 광고 매니저 점검 필요.</div></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 07</div><div class="sec-title">모바일 vs PC</div><div class="sec-subtitle">디바이스별 신청 효율 + DoD</div></div><div class="section-body"><table><tr><th>채널</th><th>디바이스</th><th class="num">6/23 신청</th><th class="num">전일</th><th class="num">DoD</th><th class="num">광고비</th><th class="num">CPA</th><th class="num">비중</th></tr><tr><td rowspan="2">네이버SA</td><td><b>모바일 (sa_mo)</b></td><td class="num">440</td><td class="num">345</td><td class="num up">▲ +27.5%</td><td class="num">₩105,613</td><td class="num">₩240</td><td class="num">74.8%</td></tr><tr><td>PC (sa_pc)</td><td class="num">148</td><td class="num">96</td><td class="num up">▲ +54.2%</td><td class="num">₩35,525</td><td class="num">₩240</td><td class="num">25.2%</td></tr><tr class="total"><td colspan="2">네이버SA 합계</td><td class="num">588</td><td class="num">441</td><td class="num up">▲ +33.3%</td><td class="num">₩141,138</td><td class="num">₩240</td><td class="num">100%</td></tr><tr><td colspan="2">네이버 referral (모바일 검색)</td><td class="num">54</td><td class="num">59</td><td class="num down">▼ -8.5%</td><td class="num">₩0</td><td class="num">—</td><td class="num">—</td></tr></table></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 08</div><div class="sec-title">마케팅 히스토리</div><div class="sec-subtitle">기간 내 캠페인 변경 사항 (마케팅 히스토리 시트)</div></div><div class="section-body"><table><tr><th>일자</th><th>채널</th><th>변경 유형</th><th>변경 내용</th><th>의도/사유</th></tr><tr><td>06-15</td><td><span class="tag meta">메타</span></td><td>광고세트 전환</td><td>메타 광고세트(입찰 모수) 교체</td><td>장기간 운영으로 기존 세트 학습이 한쪽으로 치우치고 소재 피로도가 누적되어, 모수를 재설정해 신규 도달과 전환 효율을 회복하기 위함.</td></tr><tr><td>06-15</td><td><span class="tag meta">메타</span></td><td>소재 신규 투입</td><td>CI 슬라이드 소재 tving_ci_slid 투입</td><td>CI(주민번호 연계정보) 유출 위험을 단계적으로 설명하기에는 단일컷보다 슬라이드가 적합하고, 06.15 기준 CI 관련 검색·관심이 늘어난 데 대응하기 위함.</td></tr><tr><td>06-15</td><td><span class="tag meta">메타</span></td><td>소재 신규 투입</td><td>CI 키 단일컷 소재 tving_ci_key 투입</td><td>슬라이드형(ci_slid)과 단일컷형(ci_key) 중 CI 메시지를 어느 포맷으로 전달할 때 효율이 높은지 비교하기 위함.</td></tr><tr><td>06-15</td><td><span class="tag meta">메타</span></td><td>소재 신규 투입</td><td>CI 피해자 소구 소재 tving_ci_victim 투입</td><td>CI 메시지를 "위험 경고(key)", "단계 설명(slid)", "피해자 공감(victim)" 세 각도로 나눠 어떤 프레임이 신청으로 이어지는지 확인하기 위함.</td></tr><tr><td>06-11</td><td><span class="tag naver">네이버SA</span></td><td>예산 증액</td><td>네이버 입찰가·예산 대폭 상향</td><td>06.11 전후로 검색 경쟁(타 법무법인 입찰)이 심해지고 평균노출순위가 밀리자, 상위 노출을 회복하고 검색 피해자 유입을 다시 끌어올리기 위함.</td></tr><tr><td>06-09</td><td><span class="tag naver">네이버SA</span></td><td>채널 확장</td><td>네이버 블로그 콘텐츠 유입 채널 추가</td><td>광고비가 드는 SA만으로는 한계가 있어, 정보성 블로그 콘텐츠로 신뢰를 주면서 추가 신청을 끌어오는 저비용 유입 경로를 확보하기 위함.</td></tr><tr><td>06-08</td><td><span class="tag google">구글</span></td><td>집행 중단</td><td>구글 검색광고 사실상 중단</td><td>구글은 디스플레이 게재위치가 소송과 무관한 영상·페이지로 새어나가 CTR·전환 효율이 네이버·메타보다 낮아, 예산을 효율 높은 채널로 재배분하기 위함.</td></tr><tr><td>06-05</td><td><span class="tag google">구글</span></td><td>집행 본격화</td><td>구글 SA 예산 본격 투입</td><td>셋업·심사 완료 후 정상 게재가 시작되어 트래픽을 본격 확보하기 위함.</td></tr><tr><td>06-05</td><td><span class="tag naver">네이버SA</span></td><td>캠페인 추가</td><td>네이버 추가 캠페인(classaction_260605) 셋팅</td><td>소재·랜딩 버전을 분리해 어느 진입 버전이 더 잘 전환되는지 날짜 단위로 구분하기 위함.</td></tr></table></div></section><section class="section"><div class="section-header"><div class="sec-num">SECTION 09</div><div class="sec-title">인사이트 & 액션 플랜</div><div class="sec-subtitle">관찰 · 원인 · 액션 · 우선순위</div></div><div class="section-body"><h3>🔍 인사이트</h3><div class="callout"><span class="title">[1] GA 신청 전환 채널 1위: 직접 (1180명)</span><b>원인:</b> 직접이 광고비는 작지만 전환 효율은 높은 채널<br/><b>액션:</b> 직접 예산 확대 검토 — 전환 효율 좋음</div><div class="callout"><span class="title">[2] 네이버 SA 효율 최상 키워드 발견: "티빙개인정보유출소송" (CTR 39.5%, CPC ₩77), "티빙소송" (CTR 37.1%, CPC ₩77), "티빙집단소송참여" (CTR 37.0%, CPC ₩77)</span><b>원인:</b> 검색 의도가 명확하면서 CPC가 낮은 롱테일 키워드 — 입찰가 상향·노출 확대 여지 큼<br/><b>액션:</b> 효율 좋은 롱테일을 별도 광고그룹으로 분리 + 입찰가 단계적 상향</div><div class="callout callout-red"><span class="title">[3] 카카오 알림톡 UTM 누락 — 측정 정확도 문제</span>표시된 카카오 신청 6명은 UTM 부착 발송분만. 일부 알림톡에 UTM이 빠져 GA에서 <b>(direct) 트래픽 1,180명에 혼입</b>된 것으로 추정.<br/><b>원인:</b> 알림톡 발송 도구의 UTM 자동 부착 미설정<br/><b>액션:</b> 모든 알림톡 템플릿 URL에 UTM 자동 부착 — utm_source=kakao / utm_medium=crm_alimtalk / utm_campaign=캠페인명</div><h3 style="margin-top:20px;">⚡ 액션 플랜</h3><table><tr><th>우선순위</th><th>채널</th><th>실행 항목</th><th>실행 시점</th></tr><tr><td><span class="tag p1">P1</span></td><td>네이버SA</td><td>네이버SA 채널 일별 KPI 변동 모니터링 + 효율 키워드 예산 확대</td><td>익영업일</td></tr><tr><td><span class="tag p1">P1</span></td><td>네이버SA</td><td>효율 최상 키워드 (티빙개인정보유출소송/티빙소송/티빙집단소송참여) 별도 광고그룹 분리 + 입찰가 점진 상향</td><td>이번 주</td></tr><tr><td><span class="tag p2">P2</span></td><td>직접</td><td>직접 전환 기여도 확인 후 예산 확대 검토</td><td>이번 주</td></tr><tr><td><span class="tag p2">P2</span></td><td>전체</td><td>채널 다변화 — 단일 채널 의존도 분산</td><td>다음 주</td></tr><tr><td><span class="tag p1">P1</span></td><td>카카오</td><td><b>알림톡 발송 시 UTM 자동 부착</b> — 측정 정확도 개선</td><td>익영업일</td></tr><tr><td><span class="tag p1">P1</span></td><td>메타</td><td><b>머신러닝 학습 단계 인내</b> — 노출 감소 소재 끄지 말고 예산 유지 (7~14일 안정화)</td><td>지속</td></tr></table></div></section><div class="footer">에이아이컨실리움 · 법무법인 더 에이치 황해 · CONFIDENTIAL · 2026-06-23 일간 분석 보고서<span class="pgnum"> — 인쇄용 A4</span></div></div></body></html>
